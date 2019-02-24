@@ -7,7 +7,7 @@ struct Token {
 }
 
 fn main() {
-    let input: &str = "2y + 11 ^ x";
+    let input: &str = "2y + 11(1 + 2 + 3) + 12 /    4";
     let input = input.replace(" ", "");
     println!("{}", input);
 
@@ -22,41 +22,55 @@ fn main() {
         } else if letter == '.' {
             num_vec.push(letter);
         } else if letter.is_alphabetic() {
-            let literal = buffer_to_token("Literal", &num_vec[..]);
-            if let Some(x) = literal {
-                result.push(x);
-            }
+            drain_buffer("Literal", &num_vec[..], &mut result);
             char_vec.push(letter);
             num_vec.clear();
         } else if is_operator(letter) {
-            let literal = buffer_to_token("Literal", &num_vec[..]);
-            let variable = buffer_to_token("Variable", &char_vec[..]);
-            if let Some(x) = literal {
-                result.push(x);
-            }
-            if let Some(x) = variable {
-                result.push(x);
-            }
+            drain_buffer("Literal", &num_vec[..], &mut result);
             num_vec.clear();
+            drain_buffer("Variable", &char_vec[..], &mut result);
             char_vec.clear();
             result.push(Token { kind: "Operator".into(), val: letter.to_string() });
+        } else if letter == '(' {
+            if char_vec.len() > 0 {
+                drain_buffer("Function", &char_vec[..], &mut result);
+                char_vec.clear();
+            } else if num_vec.len() > 0 {
+                drain_buffer("Literal", &num_vec[..], &mut result);
+                result.push( Token{kind: "Operator".into(), val: "*".to_string()} );
+                num_vec.clear();
+            }
+            result.push( Token{kind: "Left Paren".into(), val: letter.to_string()} );
+        } else if letter == ')' {
+            drain_buffer("Literal", &num_vec[..], &mut result);
+            num_vec.clear();
+            drain_buffer("Variable", &char_vec[..], &mut result);
+            char_vec.clear();
+            result.push(Token { kind: "Right Paren".into(), val: letter.to_string() });
+        } else if letter == ',' {
+            drain_buffer("Literal", &num_vec[..], &mut result);
+            num_vec.clear();
+            drain_buffer("Variable", &char_vec[..], &mut result);
+            char_vec.clear();
+            result.push(Token { kind: "Function Arg Separator".into(), val: letter.to_string() });
         }
-        println!("{}", letter);
-        for token in &result {
-            println!("{:?}", token);
-        }
+    }
+    drain_buffer("Literal", &num_vec[..], &mut result);
+    num_vec.clear();
+    drain_buffer("Variable", &char_vec[..], &mut result);
+    char_vec.clear();
+    for token in &result {
+        println!("{} => {}", token.kind, token.val);
     }
 }
 
-fn buffer_to_token(k: &str, v: &str) -> Option<Token> {
+fn drain_buffer(k: &str, v: &str, result: &mut Vec<Token>) {
     if v.len() > 0 {
         let token = Token {
             kind: k.into(),
             val: v.chars().collect::<String>()
         };
-        Some(token)
-    } else {
-        None
+        result.push(token);
     }
 }
 
