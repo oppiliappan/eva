@@ -1,3 +1,5 @@
+use std::io::{ stdin, stdout };
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Operator {
     token: char,
@@ -31,14 +33,22 @@ impl Operator {
 }
 
 fn main() {
-    let input = "1 + 5 * 6 + 2";
-    println!("{}", input);
-    let input = input.replace(" ", "");
-    let lexed = lexer(&input);
-    let postfixed = to_postfix(lexed.unwrap());
-    let evaled = eval_postfix(postfixed.unwrap());
+    loop {
+        let mut input = String::new();
+        stdin().read_line(&mut input).unwrap();
 
-    println!("{:?}", evaled);
+        let input = input.trim();
+        let input = input.replace(" ", "");
+
+        if input == "exit" {
+            return
+        }
+
+        let lexed = lexer(&input[..]);
+        let postfixed = to_postfix(lexed.unwrap());
+        let evaled = eval_postfix(postfixed.unwrap());
+        println!("{}", evaled.unwrap());
+    }
 }
 
 fn lexer(input: &str) -> Result<Vec<Token>, String> {
