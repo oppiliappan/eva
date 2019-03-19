@@ -1,5 +1,5 @@
 [package]
-name = "tokenizer"
+name = "eva"
 version = "0.1.0"
 authors = ["NerdyPepper <akshayoppiliappan@gmail.com>"]
 edition = "2018"
