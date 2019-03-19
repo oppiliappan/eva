@@ -91,6 +91,11 @@ fn lexer(input: &str) -> Result<Vec<Token>, String> {
             }
         }
     }
+    let parse_num = num_vec.parse::<f64>().ok();
+    if let Some(x) = parse_num {
+        result.push(Token::Num(x));
+        num_vec.clear();
+    }
     Ok(result)
 }
 
