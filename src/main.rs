@@ -31,11 +31,14 @@ impl Operator {
 }
 
 fn main() {
-    let input = "1 + 2 * 3";
+    let input = "1 + 5 * 6 + 2";
+    println!("{}", input);
     let input = input.replace(" ", "");
     let lexed = lexer(&input);
     let postfixed = to_postfix(lexed.unwrap());
-    println!("{:?}", postfixed);
+    let evaled = eval_postfix(postfixed.unwrap());
+
+    println!("{:?}", evaled);
 }
 
 fn lexer(input: &str) -> Result<Vec<Token>, String> {
@@ -72,6 +75,14 @@ fn lexer(input: &str) -> Result<Vec<Token>, String> {
                     result.push(Operator::token_from_op('*', |x, y| x * y, 3, true));
                     num_vec.clear();
                 }
+                if let Some(x) = result.last() {
+                    match x {
+                        Token::RParen => {
+                            result.push(Operator::token_from_op('*', |x, y| x * y, 3, true));
+                        },
+                        _ => {}
+                    };
+                }
                 // finish
                 result.push(Token::LParen);
             },
@@ -106,20 +117,18 @@ fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
         match token {
             Token::Num(_) => {
                 postfixed.push(token);
-                println!("pushed a number {:?}", token);
             },
             Token::Operator(current_op) => {
                 while let Some(top_op) = op_stack.last() {
                     match top_op {
                         Token::LParen => {
-                            return Err(format!("Mismatched Parentheses!"))
+                            break;
                         }
                         Token::Operator(top_op) => {
                             let tp = top_op.precedence;
                             let cp = current_op.precedence;
                             if tp > cp || (tp == cp && top_op.is_left_associative) {
                                 postfixed.push(op_stack.pop().unwrap());
-                                println!("pushed an operator special {:?}", token);
                             } else {
                                 break;
                             }
@@ -130,7 +139,6 @@ fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
                     }
                 }
                 op_stack.push(token);
-                println!("pushed an operator {:?}", token);
             },
             Token::LParen => {
                 op_stack.push(token);
@@ -159,4 +167,34 @@ fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
         postfixed.push(op);
     }
     Ok(postfixed)
+}
+
+fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, String> {
+    let mut num_stack: Vec<f64> = vec![];
+    for token in postfixed {
+        match token {
+            Token::Num(n) => {
+                num_stack.push(n);
+            },
+            Token::Operator(op) => {
+                if let Some(n2) = num_stack.pop() {
+                    if let Some(n1) = num_stack.pop() {
+                        num_stack.push(op.operate(n1, n2))
+                    } else {
+                        return Err(format!("Too many operators, Too little operands"))
+                    }
+                } else {
+                    return Err(format!("Too many operators, Too little operands"))
+                }
+            }
+            _ => {
+                return Err(format!("Yo nibba how did this get here"))
+            }
+        }
+    }
+    if num_stack.len() == 1 {
+        Ok(num_stack.pop().unwrap())
+    } else {
+        Err(format!("Parser Error"))
+    }
 }
