@@ -1,5 +1,4 @@
-use std::io::{ stdin, stdout };
-use std::io::{self, Write};
+use std::f64;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Operator {
@@ -111,14 +110,15 @@ fn lexer(input: &str) -> Result<Vec<Token>, String> {
                 if char_vec.len() > 0 {
                     let funct = char_vec.clone();
                     match &funct[..] {
-                        "sin" | "sine"      => result.push(Function::token_from_fn("sin".into(), |x| x.sin())),
-                        "cos" | "cosine"    => result.push(Function::token_from_fn("cos".into(), |x| x.cos())),
-                        "tan" | "tangent"   => result.push(Function::token_from_fn("tan".into(), |x| x.tan())),
-                        "csc" | "cosec"     => result.push(Function::token_from_fn("csc".into(), |x| 1f64 / x.sin())),
-                        "sec" | "secant"    => result.push(Function::token_from_fn("sec".into(), |x| 1f64 / x.cos())),
-                        "cot" | "cotangent" => result.push(Function::token_from_fn("cot".into(), |x| 1f64 / x.tan())),
+                        "sin" | "sine"      => result.push(Function::token_from_fn("sin".into(), |x| x.to_radians().sin())),
+                        "cos" | "cosine"    => result.push(Function::token_from_fn("cos".into(), |x| x.to_radians().cos())),
+                        "tan" | "tangent"   => result.push(Function::token_from_fn("tan".into(), |x| x.to_radians().tan())),
+                        "csc" | "cosec"     => result.push(Function::token_from_fn("csc".into(), |x| 1f64 / x.to_radians().sin())),
+                        "sec" | "secant"    => result.push(Function::token_from_fn("sec".into(), |x| 1f64 / x.to_radians().cos())),
+                        "cot" | "cotangent" => result.push(Function::token_from_fn("cot".into(), |x| 1f64 / x.to_radians().tan())),
                         "ln"                => result.push(Function::token_from_fn("ln".into(), |x| x.ln())),
-                        _ => {}
+                        "log"               => result.push(Function::token_from_fn("log".into(), |x| x.log10())),
+                        _                   => {}
                     }
                     char_vec.clear();
                 } else {
@@ -202,15 +202,15 @@ fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
                 op_stack.push(token);
             },
             Token::RParen => {
-                let mut push_until: bool = false;
+                let mut push_until_paren: bool = false;
                 while let Some(token) = op_stack.pop() {
                     if token == Token::LParen {
-                        push_until = true;
+                        push_until_paren = true;
                         break;
                     }
                     postfixed.push(token)
                 }
-                if !push_until {
+                if !push_until_paren {
                     return Err(String::from("Mismatched ')'"));
                 }
             }
@@ -220,7 +220,6 @@ fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
     while let Some(op) = op_stack.pop() {
         postfixed.push(op);
     }
-    println!("{:?}", postfixed);
     Ok(postfixed)
 }
 
