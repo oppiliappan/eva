@@ -15,7 +15,7 @@ pub struct Function {
     relation: fn(f64) -> f64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Operator(Operator),
     Num(f64),
@@ -162,6 +162,16 @@ fn lexer(input: &str) -> Result<Vec<Token>, String> {
     Ok(result)
 }
 
+fn tilt_until(operators: &mut Vec<Token>, output: &mut Vec<Token>, stop: Token) -> bool {
+    while let Some(token) = operators.pop() {
+        if token == stop {
+            return true;
+        }
+        output.push(token)
+    }
+    false
+}
+
 fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
     let mut postfixed: Vec<Token> = vec![];
     let mut op_stack: Vec<Token> = vec![];
@@ -179,10 +189,10 @@ fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
                         Token::LParen => {
                             break;
                         }
-                        Token::Operator(top_op) => {
-                            let tp = top_op.precedence;
+                        Token::Operator(x) => {
+                            let tp = x.precedence;
                             let cp = current_op.precedence;
-                            if tp > cp || (tp == cp && top_op.is_left_associative) {
+                            if tp > cp || (tp == cp && x.is_left_associative) {
                                 postfixed.push(op_stack.pop().unwrap());
                             } else {
                                 break;
@@ -192,7 +202,7 @@ fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
                             postfixed.push(op_stack.pop().unwrap());
                         }
                         _ => {
-                            return Err(format!("Unexpected match branch part 2"))
+                            return Err(format!("{:?} must not be on operator stack", top_op))
                         }
                     }
                 }
@@ -202,20 +212,8 @@ fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
                 op_stack.push(token);
             },
             Token::RParen => {
-                let mut found: bool = false;
-                while let Some(top_op) = op_stack.last() {
-                    match top_op {
-                        Token::LParen => {
-                            let _ = op_stack.pop().unwrap();
-                            found = true;
-                        },
-                        _ => {
-                            postfixed.push(op_stack.pop().unwrap());
-                        }
-                    }
-                }
-                if found == false {
-                    return Err(format!("Mismatched parentheses part 2"))
+                if !tilt_until(&mut op_stack, &mut postfixed, Token::LParen) {
+                    return Err(String::from("Mismatched ')'"));
                 }
             }
 
