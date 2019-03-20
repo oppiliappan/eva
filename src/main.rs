@@ -1,4 +1,5 @@
 use std::io::{ stdin, stdout };
+use std::io::{self, Write};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Operator {
@@ -8,10 +9,17 @@ pub struct Operator {
     is_left_associative: bool,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct Function {
+    token: String,
+    relation: fn(f64) -> f64,
+}
+
+#[derive(Debug, Clone)]
 pub enum Token {
     Operator(Operator),
     Num(f64),
+    Function(Function),
     LParen,
     RParen
 }
@@ -32,6 +40,20 @@ impl Operator {
     }
 }
 
+impl Function {
+    fn token_from_fn(token: String, relation: fn(f64) -> f64) -> Token {
+        Token::Function(
+            Function {
+                token,
+                relation
+            }
+        )
+    }
+    fn apply(self, arg: f64) -> f64 {
+        (self.relation)(arg)
+    }
+}
+
 fn main() {
     loop {
         let mut input = String::new();
@@ -47,26 +69,34 @@ fn main() {
         let lexed = lexer(&input[..]);
         let postfixed = to_postfix(lexed.unwrap());
         let evaled = eval_postfix(postfixed.unwrap());
-        println!("{}", evaled.unwrap());
+        println!("ans: {}", evaled.unwrap());
     }
 }
 
 fn lexer(input: &str) -> Result<Vec<Token>, String> {
     let mut num_vec: String = String::new();
+    let mut char_vec: String = String::new();
     let mut result: Vec<Token> = vec![];
     for letter in input.chars() {
         match letter {
             '0'...'9' | '.' => {
                 num_vec.push(letter);
             },
+            'a'...'z' | 'A'...'Z' => {
+                let parse_num = num_vec.parse::<f64>().ok();
+                if let Some(x) = parse_num {
+                    result.push(Token::Num(x));
+                    result.push(Operator::token_from_op('*', |x, y| x * y, 3, true));
+                    num_vec.clear();
+                }
+                char_vec.push(letter);
+            },
             '+' | '-' | '/' | '*' | '^' => {
-                // parse num buf
                 let parse_num = num_vec.parse::<f64>().ok();
                 if let Some(x) = parse_num {
                     result.push(Token::Num(x));
                     num_vec.clear();
                 }
-                // finish
                 let operator_token: Token = match letter {
                     '+' => Operator::token_from_op('+', |x, y| x + y, 2, true),
                     '-' => Operator::token_from_op('-', |x, y| x - y, 2, true),
@@ -78,13 +108,28 @@ fn lexer(input: &str) -> Result<Vec<Token>, String> {
                 result.push(operator_token);
             },
             '('  => {
-                // parse num buf
-                let parse_num = num_vec.parse::<f64>().ok();
-                if let Some(x) = parse_num {
-                    result.push(Token::Num(x));
-                    result.push(Operator::token_from_op('*', |x, y| x * y, 3, true));
-                    num_vec.clear();
+                if char_vec.len() > 0 {
+                    let funct = char_vec.clone();
+                    match &funct[..] {
+                        "sin" | "sine"      => result.push(Function::token_from_fn("sin".into(), |x| x.sin())),
+                        "cos" | "cosine"    => result.push(Function::token_from_fn("cos".into(), |x| x.cos())),
+                        "tan" | "tangent"   => result.push(Function::token_from_fn("tan".into(), |x| x.tan())),
+                        "csc" | "cosec"     => result.push(Function::token_from_fn("csc".into(), |x| 1f64 / x.sin())),
+                        "sec" | "secant"    => result.push(Function::token_from_fn("sec".into(), |x| 1f64 / x.cos())),
+                        "cot" | "cotangent" => result.push(Function::token_from_fn("cot".into(), |x| 1f64 / x.tan())),
+                        "ln"                => result.push(Function::token_from_fn("ln".into(), |x| x.ln())),
+                        _ => {}
+                    }
+                    char_vec.clear();
+                } else {
+                    let parse_num = num_vec.parse::<f64>().ok();
+                    if let Some(x) = parse_num {
+                        result.push(Token::Num(x));
+                        result.push(Operator::token_from_op('*', |x, y| x * y, 3, true));
+                        num_vec.clear();
+                    }
                 }
+
                 if let Some(x) = result.last() {
                     match x {
                         Token::RParen => {
@@ -93,17 +138,14 @@ fn lexer(input: &str) -> Result<Vec<Token>, String> {
                         _ => {}
                     };
                 }
-                // finish
                 result.push(Token::LParen);
             },
             ')' => {
-                // parse num buf
                 let parse_num = num_vec.parse::<f64>().ok();
                 if let Some(x) = parse_num {
                     result.push(Token::Num(x));
                     num_vec.clear();
                 }
-                // finish
                 result.push(Token::RParen);
             }
             ' ' => {}
