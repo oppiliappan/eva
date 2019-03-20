@@ -162,16 +162,6 @@ fn lexer(input: &str) -> Result<Vec<Token>, String> {
     Ok(result)
 }
 
-fn tilt_until(operators: &mut Vec<Token>, output: &mut Vec<Token>, stop: Token) -> bool {
-    while let Some(token) = operators.pop() {
-        if token == stop {
-            return true;
-        }
-        output.push(token)
-    }
-    false
-}
-
 fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
     let mut postfixed: Vec<Token> = vec![];
     let mut op_stack: Vec<Token> = vec![];
@@ -212,7 +202,15 @@ fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
                 op_stack.push(token);
             },
             Token::RParen => {
-                if !tilt_until(&mut op_stack, &mut postfixed, Token::LParen) {
+                let mut push_until: bool = false;
+                while let Some(token) = op_stack.pop() {
+                    if token == Token::LParen {
+                        push_until = true;
+                        break;
+                    }
+                    postfixed.push(token)
+                }
+                if !push_until {
                     return Err(String::from("Mismatched ')'"));
                 }
             }
