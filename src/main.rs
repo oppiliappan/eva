@@ -170,6 +170,9 @@ fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
             Token::Num(_) => {
                 postfixed.push(token);
             },
+            Token::Function(_) => {
+                op_stack.push(token);
+            }
             Token::Operator(current_op) => {
                 while let Some(top_op) = op_stack.last() {
                     match top_op {
@@ -184,6 +187,9 @@ fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
                             } else {
                                 break;
                             }
+                        }
+                        Token::Function(_) => {
+                            postfixed.push(op_stack.pop().unwrap());
                         }
                         _ => {
                             return Err(format!("Unexpected match branch part 2"))
@@ -218,6 +224,7 @@ fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
     while let Some(op) = op_stack.pop() {
         postfixed.push(op);
     }
+    println!("{:?}", postfixed);
     Ok(postfixed)
 }
 
@@ -237,6 +244,11 @@ fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, String> {
                     }
                 } else {
                     return Err(format!("Too many operators, Too little operands"))
+                }
+            },
+            Token::Function(funct) => {
+                if let Some(arg) = num_stack.pop() {
+                    num_stack.push(funct.apply(arg))
                 }
             }
             _ => {
