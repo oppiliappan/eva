@@ -1,4 +1,3 @@
-use std::f64;
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Operator {
     token: char,
@@ -90,11 +89,7 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                 }
             },
             '/' | '*' | '^' => {
-                let parse_num = num_vec.parse::<f64>().ok();
-                if let Some(x) = parse_num {
-                    result.push(Token::Num(x));
-                    num_vec.clear();
-                }
+                drain_num_stack(&mut num_vec, &mut result);
                 let operator_token: Token = match letter {
                     '/' => Operator::token_from_op('/', |x, y| x / y, 3, true),
                     '*' => Operator::token_from_op('*', |x, y| x * y, 3, true),
@@ -141,11 +136,7 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                 result.push(Token::LParen);
             },
             ')' => {
-                let parse_num = num_vec.parse::<f64>().ok();
-                if let Some(x) = parse_num {
-                    result.push(Token::Num(x));
-                    num_vec.clear();
-                }
+                drain_num_stack(&mut num_vec, &mut result);
                 result.push(Token::RParen);
             }
             ' ' => {}
@@ -154,10 +145,14 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
             }
         }
     }
+    drain_num_stack(&mut num_vec, &mut result);
+    Ok(result)
+}
+
+fn drain_num_stack(num_vec: &mut String, result: &mut Vec<Token>) {
     let parse_num = num_vec.parse::<f64>().ok();
     if let Some(x) = parse_num {
         result.push(Token::Num(x));
         num_vec.clear();
     }
-    Ok(result)
 }
