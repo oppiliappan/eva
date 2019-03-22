@@ -100,6 +100,8 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                         "ln"                => result.push(Function::token_from_fn("ln".into(), |x| x.ln())),
                         "log"               => result.push(Function::token_from_fn("log".into(), |x| x.log10())),
                         "sqrt"              => result.push(Function::token_from_fn("sqrt".into(), |x| x.sqrt())),
+                        "floor"             => result.push(Function::token_from_fn("floor".into(), |x| x.floor())),
+                        "ceil"              => result.push(Function::token_from_fn("ceil".into(), |x| x.ceil())),
                         _                   => return Err(format!("Unexpected function {}", funct))
                     }
                     char_vec.clear();
