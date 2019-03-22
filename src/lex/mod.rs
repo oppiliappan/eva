@@ -56,16 +56,19 @@ pub enum Token {
 
 fn get_functions() -> HashMap<&'static str, Token> {
     return [
-        ("sin", Function::token_from_fn("sin".into(), |x| x.to_radians().sin())),
-        ("cos", Function::token_from_fn("cos".into(), |x| x.to_radians().cos())),
-        ("tan", Function::token_from_fn("tan".into(), |x| x.to_radians().tan())),
-        ("csc", Function::token_from_fn("csc".into(), |x| 1. / x.to_radians().sin())),
-        ("sec", Function::token_from_fn("sec".into(), |x| 1. /  x.to_radians().cos())),
-        ("cot", Function::token_from_fn("cot".into(), |x| 1. /  x.to_radians().tan())),
-        ("ln", Function::token_from_fn("ln".into(), |x| x.ln())),
-        ("log", Function::token_from_fn("log".into(), |x| x.log10())),
-        ("sqrt", Function::token_from_fn("sqrt".into(), |x| x.sqrt())),
-        ("ceil", Function::token_from_fn("ceil".into(), |x| x.ceil())),
+        ("sin",   Function::token_from_fn("sin".into(), |x| x.to_radians().sin())),
+        ("cos",   Function::token_from_fn("cos".into(), |x| x.to_radians().cos())),
+        ("tan",   Function::token_from_fn("tan".into(), |x| x.to_radians().tan())),
+        ("csc",   Function::token_from_fn("csc".into(), |x| x.to_radians().sin().recip())),
+        ("sec",   Function::token_from_fn("sec".into(), |x| x.to_radians().cos().recip())),
+        ("cot",   Function::token_from_fn("cot".into(), |x| x.to_radians().tan().recip())),
+        ("sinh",  Function::token_from_fn("sinh".into(), |x| x.sinh())),
+        ("cosh",  Function::token_from_fn("cosh".into(), |x| x.cosh())),
+        ("tanh",  Function::token_from_fn("tanh".into(), |x| x.tanh())),
+        ("ln",    Function::token_from_fn("ln".into(), |x| x.ln())),
+        ("log",   Function::token_from_fn("log".into(), |x| x.log10())),
+        ("sqrt",  Function::token_from_fn("sqrt".into(), |x| x.sqrt())),
+        ("ceil",  Function::token_from_fn("ceil".into(), |x| x.ceil())),
         ("floor", Function::token_from_fn("floor".into(), |x| x.floor())),
     ].iter().cloned().collect();
 }
