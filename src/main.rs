@@ -11,20 +11,12 @@ fn main() {
     loop {
         let mut input = String::new();
         stdin().read_line(&mut input).unwrap();
-
         let input = input.trim();
         let input = input.replace(" ", "");
-        let input = autobalance_parens(&input[..]).unwrap();
-
         if input == "exit" {
             return
         }
-
-        let lexed = lexer(&input[..]);
-        let postfixed = to_postfix(lexed.unwrap());
-        let evaled = eval_postfix(postfixed.unwrap());
-        println!("ans: {}", evaled.unwrap());
-        println!();
+        println!("ans: {}\n", eval_math_expression(&input[..]).unwrap());
     }
 }
 
@@ -49,4 +41,12 @@ fn autobalance_parens(input: &str) -> Result<String, String> {
     } else {
         Ok(balanced)
     }
+}
+
+fn eval_math_expression(input: &str) -> Result<f64, String> {
+    let input     = autobalance_parens(&input[..])?;
+    let lexed     = lexer(&input[..])?;
+    let postfixed = to_postfix(lexed)?;
+    let evaled    = eval_postfix(postfixed)?;
+    Ok(evaled)
 }
