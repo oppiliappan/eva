@@ -16,8 +16,6 @@ fn main() {
         let input = input.replace(" ", "");
         let input = autobalance_parens(&input[..]).unwrap();
 
-        println!("{}", input);
-
         if input == "exit" {
             return
         }

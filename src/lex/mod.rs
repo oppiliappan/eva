@@ -71,15 +71,31 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                 }
                 char_vec.push(letter);
             },
-            '+' | '-' | '/' | '*' | '^' => {
+            '+' | '-' => {
+                let op_token = match letter {
+                    '+' => Operator::token_from_op('+', |x, y| x + y, 2, true),
+                    '-' => Operator::token_from_op('-', |x, y| x - y, 2, true),
+                    _ => unreachable!()
+                };
+                let parse_num = num_vec.parse::<f64>().ok();
+                if let Some(x) = parse_num {
+                    result.push(Token::Num(x));
+                    num_vec.clear();
+                    result.push(op_token);
+                } else {
+                    result.push(Token::LParen);
+                    result.push(Token::Num((letter.to_string() + "1").parse::<f64>().unwrap()));
+                    result.push(Token::RParen);
+                    result.push(Operator::token_from_op('*', |x, y| x * y, 2, true));
+                }
+            },
+            '/' | '*' | '^' => {
                 let parse_num = num_vec.parse::<f64>().ok();
                 if let Some(x) = parse_num {
                     result.push(Token::Num(x));
                     num_vec.clear();
                 }
                 let operator_token: Token = match letter {
-                    '+' => Operator::token_from_op('+', |x, y| x + y, 2, true),
-                    '-' => Operator::token_from_op('-', |x, y| x - y, 2, true),
                     '/' => Operator::token_from_op('/', |x, y| x / y, 3, true),
                     '*' => Operator::token_from_op('*', |x, y| x * y, 3, true),
                     '^' => Operator::token_from_op('^', |x, y| x.powf(y), 4, false),
