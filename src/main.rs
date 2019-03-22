@@ -14,6 +14,9 @@ fn main() {
 
         let input = input.trim();
         let input = input.replace(" ", "");
+        let input = autobalance_parens(&input[..]).unwrap();
+
+        println!("{}", input);
 
         if input == "exit" {
             return
@@ -27,4 +30,25 @@ fn main() {
     }
 }
 
+fn autobalance_parens(input: &str) -> Result<String, String> {
+    let mut balanced = String::from(input);
+    let mut left_parens = 0;
+    let mut right_parens = 0;
+    for letter in input.chars() {
+        if letter == '(' {
+            left_parens += 1;
+        } else if letter == ')' {
+            right_parens += 1;
+        }
+    }
 
+    if left_parens > right_parens {
+        let extras = ")".repeat(left_parens - right_parens);
+        balanced.push_str(&extras[..]);
+        Ok(balanced)
+    } else if left_parens < right_parens {
+        return Err(format!("Mismatched parentheses"))
+    } else {
+        Ok(balanced)
+    }
+}
