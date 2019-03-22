@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Operator {
     token: char,
@@ -52,7 +54,36 @@ pub enum Token {
     RParen
 }
 
+fn get_functions() -> HashMap<&'static str, Token> {
+    return [
+        ("sin", Function::token_from_fn("sin".into(), |x| x.to_radians().sin())),
+        ("cos", Function::token_from_fn("cos".into(), |x| x.to_radians().cos())),
+        ("tan", Function::token_from_fn("tan".into(), |x| x.to_radians().tan())),
+        ("csc", Function::token_from_fn("csc".into(), |x| 1. / x.to_radians().sin())),
+        ("sec", Function::token_from_fn("sec".into(), |x| 1. /  x.to_radians().cos())),
+        ("cot", Function::token_from_fn("cot".into(), |x| 1. /  x.to_radians().tan())),
+        ("ln", Function::token_from_fn("ln".into(), |x| x.ln())),
+        ("log", Function::token_from_fn("log".into(), |x| x.log10())),
+        ("sqrt", Function::token_from_fn("sqrt".into(), |x| x.sqrt())),
+        ("ceil", Function::token_from_fn("ceil".into(), |x| x.ceil())),
+        ("floor", Function::token_from_fn("floor".into(), |x| x.floor())),
+    ].iter().cloned().collect();
+}
+
+fn get_operators() -> HashMap<char, Token> {
+    return [
+        ('+', Operator::token_from_op('+', |x, y| x + y, 2, true)),
+        ('-', Operator::token_from_op('-', |x, y| x - y, 2, true)),
+        ('*', Operator::token_from_op('*', |x, y| x * y, 3, true)),
+        ('/', Operator::token_from_op('/', |x, y| x / y, 3, true)),
+        ('^', Operator::token_from_op('^', |x, y| x.powf(y) , 4, true)),
+    ].iter().cloned().collect();
+}
+
 pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
+    let functions: HashMap<&str, Token> = get_functions();
+    let operators: HashMap<char, Token> = get_operators();
+
     let mut num_vec: String = String::new();
     let mut char_vec: String = String::new();
     let mut result: Vec<Token> = vec![];
@@ -65,17 +96,13 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                 let parse_num = num_vec.parse::<f64>().ok();
                 if let Some(x) = parse_num {
                     result.push(Token::Num(x));
-                    result.push(Operator::token_from_op('*', |x, y| x * y, 3, true));
+                    result.push(operators.get(&'*').unwrap().clone());
                     num_vec.clear();
                 }
                 char_vec.push(letter);
             },
             '+' | '-' => {
-                let op_token = match letter {
-                    '+' => Operator::token_from_op('+', |x, y| x + y, 2, true),
-                    '-' => Operator::token_from_op('-', |x, y| x - y, 2, true),
-                    _ => unreachable!()
-                };
+                let op_token = operators.get(&letter).unwrap().clone();
                 let parse_num = num_vec.parse::<f64>().ok();
                 if let Some(x) = parse_num {
                     result.push(Token::Num(x));
@@ -85,42 +112,27 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                     result.push(Token::LParen);
                     result.push(Token::Num((letter.to_string() + "1").parse::<f64>().unwrap()));
                     result.push(Token::RParen);
-                    result.push(Operator::token_from_op('*', |x, y| x * y, 2, true));
+                    result.push(operators.get(&'*').unwrap().clone());
                 }
             },
             '/' | '*' | '^' => {
                 drain_num_stack(&mut num_vec, &mut result);
-                let operator_token: Token = match letter {
-                    '/' => Operator::token_from_op('/', |x, y| x / y, 3, true),
-                    '*' => Operator::token_from_op('*', |x, y| x * y, 3, true),
-                    '^' => Operator::token_from_op('^', |x, y| x.powf(y), 4, false),
-                    _ => panic!("unexpected op whuuu"),
-                };
+                let operator_token: Token = operators.get(&letter).unwrap().clone();
                 result.push(operator_token);
             },
             '('  => {
                 if char_vec.len() > 0 {
-                    let funct = char_vec.clone();
-                    match &funct[..] {
-                        "sin" | "sine"      => result.push(Function::token_from_fn("sin".into(), |x| x.to_radians().sin())),
-                        "cos" | "cosine"    => result.push(Function::token_from_fn("cos".into(), |x| x.to_radians().cos())),
-                        "tan" | "tangent"   => result.push(Function::token_from_fn("tan".into(), |x| x.to_radians().tan())),
-                        "csc" | "cosec"     => result.push(Function::token_from_fn("csc".into(), |x| 1f64 / x.to_radians().sin())),
-                        "sec" | "secant"    => result.push(Function::token_from_fn("sec".into(), |x| 1f64 / x.to_radians().cos())),
-                        "cot" | "cotangent" => result.push(Function::token_from_fn("cot".into(), |x| 1f64 / x.to_radians().tan())),
-                        "ln"                => result.push(Function::token_from_fn("ln".into(), |x| x.ln())),
-                        "log"               => result.push(Function::token_from_fn("log".into(), |x| x.log10())),
-                        "sqrt"              => result.push(Function::token_from_fn("sqrt".into(), |x| x.sqrt())),
-                        "floor"             => result.push(Function::token_from_fn("floor".into(), |x| x.floor())),
-                        "ceil"              => result.push(Function::token_from_fn("ceil".into(), |x| x.ceil())),
-                        _                   => return Err(format!("Unexpected function {}", funct))
+                    if let Some(res) = functions.get(&char_vec[..]) {
+                        result.push(res.clone());
+                    } else {
+                        return Err(format!("Unexpected function {}", char_vec))
                     }
                     char_vec.clear();
                 } else {
                     let parse_num = num_vec.parse::<f64>().ok();
                     if let Some(x) = parse_num {
                         result.push(Token::Num(x));
-                        result.push(Operator::token_from_op('*', |x, y| x * y, 3, true));
+                        result.push(operators.get(&'*').unwrap().clone());
                         num_vec.clear();
                     }
                 }
@@ -128,7 +140,7 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                 if let Some(x) = result.last() {
                     match x {
                         Token::RParen => {
-                            result.push(Operator::token_from_op('*', |x, y| x * y, 3, true));
+                            result.push(operators.get(&'*').unwrap().clone());
                         },
                         _ => {}
                     };
