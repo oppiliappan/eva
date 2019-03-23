@@ -1,5 +1,10 @@
 use std::collections::HashMap;
 
+use crate::error::{
+    CalcError,
+    Math
+};
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Operator {
     token: char,
@@ -9,7 +14,10 @@ pub struct Operator {
 }
 
 impl Operator {
-    fn token_from_op(token: char, operation: fn(f64, f64) -> f64, precedence: u8, is_left_associative: bool) -> Token {
+    fn token_from_op(token: char,
+                     operation: fn(f64, f64) -> f64,
+                     precedence: u8,
+                     is_left_associative: bool) -> Token {
         Token::Operator(
             Operator {
                 token,
@@ -19,8 +27,12 @@ impl Operator {
             }
         )
     }
-    pub fn operate(self, x: f64, y: f64) -> f64 {
-        (self.operation)(x, y)
+    pub fn operate(self, x: f64, y: f64) -> Result<f64, CalcError> {
+        if self.token == '/' && y == 0. {
+            return Err(CalcError::Math(Math::DivideByZero))
+        } else {
+            Ok((self.operation)(x, y))
+        }
     }
 }
 
@@ -39,8 +51,13 @@ impl Function {
             }
         )
     }
-    pub fn apply(self, arg: f64) -> f64 {
-        (self.relation)(arg)
+    pub fn apply(self, arg: f64) -> Result<f64, CalcError> {
+        let result = (self.relation)(arg);
+        if !result.is_finite() {
+            return Err(CalcError::Math(Math::OutOfBounds));
+        } else {
+            Ok(result)
+        }
     }
 }
 
@@ -84,7 +101,7 @@ fn get_operators() -> HashMap<char, Token> {
     ].iter().cloned().collect();
 }
 
-pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
+pub fn lexer(input: &str) -> Result<Vec<Token>, CalcError> {
     let functions: HashMap<&str, Token> = get_functions();
     let operators: HashMap<char, Token> = get_operators();
 
@@ -97,8 +114,7 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
         match letter {
             '0'...'9' | '.' => {
                 num_vec.push(letter);
-                last_char_is_op = false; // 5 - 6
-                                         //   ^---- binary
+                last_char_is_op = false; 
             },
             'a'...'z' | 'A'...'Z' => {
                 let parse_num = num_vec.parse::<f64>().ok();
@@ -108,7 +124,7 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                     num_vec.clear();
                 }
                 char_vec.push(letter);
-                last_char_is_op = false; // + or - can never be encountered right after a character
+                last_char_is_op = false;
             },
             '+' | '-' => {
                 let op_token = operators.get(&letter).unwrap().clone();
@@ -120,7 +136,7 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                         last_char_is_op = true;
                     }
                     result.push(op_token);
-                } else if last_char_is_op { // act as unary only if an operator was parsed previously
+                } else if last_char_is_op {
                     result.push(Token::LParen);
                     result.push(Token::Num((letter.to_string() + "1").parse::<f64>().unwrap()));
                     result.push(Token::RParen);
@@ -131,17 +147,14 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                 drain_num_stack(&mut num_vec, &mut result);
                 let operator_token: Token = operators.get(&letter).unwrap().clone();
                 result.push(operator_token);
-                last_char_is_op = true; // 5 / -5
-                                        //     ^---- unary
-                                        // TODO: parse right associative followed by unary properly
-                                        // 2^+5 is parsed as 2^1*5 = 10
+                last_char_is_op = true; 
             },
             '('  => {
                 if char_vec.len() > 0 {
                     if let Some(res) = functions.get(&char_vec[..]) {
                         result.push(res.clone());
                     } else {
-                        return Err(format!("Unexpected function {}", char_vec))
+                        return Err(CalcError::Syntax(format!("Unknown function '{}'", char_vec)))
                     }
                     char_vec.clear();
                 } else {
@@ -162,21 +175,16 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                     };
                 }
                 result.push(Token::LParen);
-                last_char_is_op = true; // unary + or - if a lparen was encountered
-                                        // (-5 + 6) or (+6 + 7)
-                                        //  ^           ^
-                                        //   `-----------`----unary
+                last_char_is_op = true; 
             },
             ')' => {
                 drain_num_stack(&mut num_vec, &mut result);
                 result.push(Token::RParen);
-                last_char_is_op = false; // binary + or - if rparen was encountered 
-                                         // (1 + 2) - (3 + 4)
-                                         //         ^ binary minus
-            }
-            ' ' => {}
+                last_char_is_op = false;  
+            },
+            ' ' => {},
             _ => {
-                return Err(format!("Unexpected character: {}", letter))
+                return Err(CalcError::Syntax(format!("Unexpected character: '{}'", letter)))
             }
         }
     }
