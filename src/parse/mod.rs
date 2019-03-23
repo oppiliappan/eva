@@ -1,6 +1,7 @@
 use crate::lex::Token;
+use crate::error::CalcError;
 
-pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
+pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
     let mut postfixed: Vec<Token> = vec![];
     let mut op_stack: Vec<Token> = vec![];
     for token in tokens {
@@ -29,9 +30,7 @@ pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
                         Token::Function(_) => {
                             postfixed.push(op_stack.pop().unwrap());
                         }
-                        _ => {
-                            return Err(format!("{:?} must not be on operator stack", top_op))
-                        }
+                        _ => { unreachable!(); }
                     }
                 }
                 op_stack.push(token);
@@ -49,7 +48,7 @@ pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
                     postfixed.push(token)
                 }
                 if !push_until_paren {
-                    return Err(String::from("Mismatched ')'"));
+                    return Err(CalcError::Syntax("Mismatched parentheses!".into()));
                 }
             }
         }
@@ -60,7 +59,7 @@ pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
     Ok(postfixed)
 }
 
-pub fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, String> {
+pub fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, CalcError> {
     let mut num_stack: Vec<f64> = vec![];
     for token in postfixed {
         match token {
@@ -70,27 +69,39 @@ pub fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, String> {
             Token::Operator(op) => {
                 if let Some(n2) = num_stack.pop() {
                     if let Some(n1) = num_stack.pop() {
-                        num_stack.push(op.operate(n1, n2))
+                        num_stack.push(op.operate(n1, n2)?);
                     } else {
-                        return Err(format!("Too many operators, Too little operands"))
+                        return Err(
+                            CalcError::Parser(
+                                format!("Too many operators, Too little operands")
+                            )
+                        )
                     }
                 } else {
-                    return Err(format!("Too many operators, Too little operands"))
+                    return Err(
+                        CalcError::Parser(
+                            format!("Too many operators, Too little operands")
+                        )
+                    )
                 }
             },
             Token::Function(funct) => {
                 if let Some(arg) = num_stack.pop() {
-                    num_stack.push(funct.apply(arg))
+                    num_stack.push(funct.apply(arg)?)
                 }
             }
             _ => {
-                return Err(format!("Yo nibba how did this get here"))
+                unreachable!("nah nigga")
             }
         }
     }
     if num_stack.len() == 1 {
         Ok(num_stack.pop().unwrap())
     } else {
-        Err(format!("Parser Error"))
+        return Err(
+            CalcError::Parser(
+                format!("Too many operators, Too little operands")
+            )
+        )
     }
 }
