@@ -70,6 +70,7 @@ fn get_functions() -> HashMap<&'static str, Token> {
         ("sqrt",  Function::token_from_fn("sqrt".into(), |x| x.sqrt())),
         ("ceil",  Function::token_from_fn("ceil".into(), |x| x.ceil())),
         ("floor", Function::token_from_fn("floor".into(), |x| x.floor())),
+        // single arg functions can be added here
     ].iter().cloned().collect();
 }
 
@@ -79,7 +80,7 @@ fn get_operators() -> HashMap<char, Token> {
         ('-', Operator::token_from_op('-', |x, y| x - y, 2, true)),
         ('*', Operator::token_from_op('*', |x, y| x * y, 3, true)),
         ('/', Operator::token_from_op('/', |x, y| x / y, 3, true)),
-        ('^', Operator::token_from_op('^', |x, y| x.powf(y) , 4, true)),
+        ('^', Operator::token_from_op('^', |x, y| x.powf(y) , 4, false)),
     ].iter().cloned().collect();
 }
 
@@ -123,7 +124,7 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                     result.push(Token::LParen);
                     result.push(Token::Num((letter.to_string() + "1").parse::<f64>().unwrap()));
                     result.push(Token::RParen);
-                    result.push(operators.get(&'*').unwrap().clone());
+                    result.push(Operator::token_from_op('*', |x, y| x * y, 10, true));
                 }
             },
             '/' | '*' | '^' => {
@@ -132,6 +133,8 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                 result.push(operator_token);
                 last_char_is_op = true; // 5 / -5
                                         //     ^---- unary
+                                        // TODO: parse right associative followed by unary properly
+                                        // 2^+5 is parsed as 2^1*5 = 10
             },
             '('  => {
                 if char_vec.len() > 0 {
@@ -161,7 +164,8 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                 result.push(Token::LParen);
                 last_char_is_op = true; // unary + or - if a lparen was encountered
                                         // (-5 + 6) or (+6 + 7)
-                                        //  ^-----------^-----unary
+                                        //  ^           ^
+                                        //   `-----------`----unary
             },
             ')' => {
                 drain_num_stack(&mut num_vec, &mut result);
@@ -177,7 +181,6 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
         }
     }
     drain_num_stack(&mut num_vec, &mut result);
-    println!("{:?}", result);
     Ok(result)
 }
 
