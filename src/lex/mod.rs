@@ -90,10 +90,14 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
     let mut num_vec: String = String::new();
     let mut char_vec: String = String::new();
     let mut result: Vec<Token> = vec![];
+    let mut last_char_is_op = true;
+
     for letter in input.chars() {
         match letter {
             '0'...'9' | '.' => {
                 num_vec.push(letter);
+                last_char_is_op = false; // 5 - 6
+                                         //   ^---- binary
             },
             'a'...'z' | 'A'...'Z' => {
                 let parse_num = num_vec.parse::<f64>().ok();
@@ -103,15 +107,19 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                     num_vec.clear();
                 }
                 char_vec.push(letter);
+                last_char_is_op = false; // + or - can never be encountered right after a character
             },
             '+' | '-' => {
                 let op_token = operators.get(&letter).unwrap().clone();
                 let parse_num = num_vec.parse::<f64>().ok();
-                if let Some(x) = parse_num {
-                    result.push(Token::Num(x));
-                    num_vec.clear();
+                if !last_char_is_op {
+                    if let Some(x) = parse_num {
+                        result.push(Token::Num(x));
+                        num_vec.clear();
+                        last_char_is_op = true;
+                    }
                     result.push(op_token);
-                } else {
+                } else if last_char_is_op { // act as unary only if an operator was parsed previously
                     result.push(Token::LParen);
                     result.push(Token::Num((letter.to_string() + "1").parse::<f64>().unwrap()));
                     result.push(Token::RParen);
@@ -122,6 +130,8 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                 drain_num_stack(&mut num_vec, &mut result);
                 let operator_token: Token = operators.get(&letter).unwrap().clone();
                 result.push(operator_token);
+                last_char_is_op = true; // 5 / -5
+                                        //     ^---- unary
             },
             '('  => {
                 if char_vec.len() > 0 {
@@ -149,10 +159,16 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
                     };
                 }
                 result.push(Token::LParen);
+                last_char_is_op = true; // unary + or - if a lparen was encountered
+                                        // (-5 + 6) or (+6 + 7)
+                                        //  ^-----------^-----unary
             },
             ')' => {
                 drain_num_stack(&mut num_vec, &mut result);
                 result.push(Token::RParen);
+                last_char_is_op = false; // binary + or - if rparen was encountered 
+                                         // (1 + 2) - (3 + 4)
+                                         //         ^ binary minus
             }
             ' ' => {}
             _ => {
@@ -161,6 +177,7 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, String> {
         }
     }
     drain_num_stack(&mut num_vec, &mut result);
+    println!("{:?}", result);
     Ok(result)
 }
 
