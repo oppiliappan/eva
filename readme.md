@@ -35,29 +35,28 @@ ans: 3.4999999999999996
 
 ### functions
 
-all trignometric functions expect input in degrees.  
-conversion to radians is to be done manually (` x * 3.14 / 180`)
+fn(x: Number) -> Number
 
 ```
-sin  
-cos  
-tan  
-csc     # cosec is for pesants
-sec  
-cot  
-sinh 
-cosh 
-tanh 
-ln      # log to the base e
-log     # log to the base 10
-sqrt    # x ^ 0.5
-ceil 
-floor
+sin(x) |    
+cos(x) | 
+tan(x) | 
+csc(x) | -> x is in degrees  
+sec(x) | 
+cot(x) | 
+sinh(x)
+cosh(x)
+tanh(x)
+ln(x)     # log to the base e
+log(x)    # log to the base 10
+sqrt(x)   # x ^ 0.5
+ceil(x)
+floor(x)
 ```
 
 examples:  
 ```
-sqrt(sin(30)) # parenstheses are mandatory for functions
+sqrt(sin(30)) # parentheses are mandatory for functions
 
 log100        # no
 log(100)      # yes
@@ -65,21 +64,15 @@ log(100)      # yes
 
 ### quality of life features
 
-auto insertion of `*` operator
+ - auto insertion of `*` operator
 ```
-12sin(90)  # 12 * sin(90)
+12sin(45(2))  # 12 * sin(45 * (2))
 ans: 12
-
-(5 + 6)(6 + 7)  # (5 + 6) * (6 + 7)
-ans: 143
-
-11(12)  # 11 * (12)
-ans: 132
 ```
 
-auto balancing of parentheses
+ - auto balancing of parentheses
 ```
-ceil(sqrt(3^2 + 5^2
+ceil(sqrt(3^2 + 5^2   # ceil(sqrt(3^2 + 5^2))
 ans: 6
 ```
 
@@ -87,6 +80,7 @@ ans: 6
 
  - add detailed error handler
  - multiple arg functions
- - ~~unary operators (minus, factorial)~~
+ - ~~unary operators (minus, plus)~~
+ - screenshots
  - lineditor with syntax highlighting
  - ~~add more functions~~
