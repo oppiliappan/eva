@@ -6,6 +6,9 @@ use crate::lex::*;
 mod parse;
 use crate::parse::*;
 
+mod error;
+use crate::error::{ CalcError, handler };
+
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
@@ -14,13 +17,16 @@ let mut rl = Editor::<()>::new();
     if rl.load_history("history.txt").is_err() {
         println!("No previous history.");
     }
-    loop {
+    'main: loop {
         let readline = rl.readline("> ");
         match readline {
             Ok(line) => {
                 rl.add_history_entry(line.as_ref());
-                let evaled = eval_math_expression(&line[..]).unwrap();
-                println!("{}", evaled);
+                let evaled = eval_math_expression(&line[..]);
+                match evaled {
+                    Ok(ans) => println!("{}", ans),
+                    Err(e) => handler(e),
+                };
             },
             Err(ReadlineError::Interrupted) => {
                 println!("CTRL-C");
@@ -39,7 +45,7 @@ let mut rl = Editor::<()>::new();
     rl.save_history("history.txt").unwrap();
 }
 
-fn autobalance_parens(input: &str) -> Result<String, String> {
+fn autobalance_parens(input: &str) -> Result<String, CalcError> {
     let mut balanced = String::from(input);
     let mut left_parens = 0;
     let mut right_parens = 0;
@@ -56,16 +62,17 @@ fn autobalance_parens(input: &str) -> Result<String, String> {
         balanced.push_str(&extras[..]);
         Ok(balanced)
     } else if left_parens < right_parens {
-        return Err(format!("Mismatched parentheses"))
+        return Err(CalcError::Syntax("Mismatched parentheses!".into()))
     } else {
         Ok(balanced)
     }
 }
 
-fn eval_math_expression(input: &str) -> Result<f64, String> {
+fn eval_math_expression(input: &str) -> Result<f64, CalcError> {
     let input     = autobalance_parens(&input[..])?;
     let lexed     = lexer(&input[..])?;
     let postfixed = to_postfix(lexed)?;
     let evaled    = eval_postfix(postfixed)?;
     Ok(evaled)
 }
+
