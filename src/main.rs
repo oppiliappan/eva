@@ -1,4 +1,3 @@
-use std::io::{ stdin };
 use std::f64;
 
 mod lex;
@@ -7,17 +6,37 @@ use crate::lex::*;
 mod parse;
 use crate::parse::*;
 
+use rustyline::error::ReadlineError;
+use rustyline::Editor;
+
 fn main() {
-    loop {
-        let mut input = String::new();
-        stdin().read_line(&mut input).unwrap();
-        let input = input.trim();
-        let input = input.replace(" ", "");
-        if input == "exit" {
-            return
-        }
-        println!("ans: {}\n", eval_math_expression(&input[..]).unwrap());
+let mut rl = Editor::<()>::new();
+    if rl.load_history("history.txt").is_err() {
+        println!("No previous history.");
     }
+    loop {
+        let readline = rl.readline("> ");
+        match readline {
+            Ok(line) => {
+                rl.add_history_entry(line.as_ref());
+                let evaled = eval_math_expression(&line[..]).unwrap();
+                println!("{}", evaled);
+            },
+            Err(ReadlineError::Interrupted) => {
+                println!("CTRL-C");
+                break
+            },
+            Err(ReadlineError::Eof) => {
+                println!("CTRL-D");
+                break
+            },
+            Err(err) => {
+                println!("Error: {:?}", err);
+                break
+            }
+        }
+    }
+    rl.save_history("history.txt").unwrap();
 }
 
 fn autobalance_parens(input: &str) -> Result<String, String> {
