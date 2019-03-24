@@ -18,14 +18,12 @@ $ eva
 type out an expression and hit enter, repeat.
 
 ```shell
-1 + sin(30)
-ans: 1.5
-
-floor(sqrt(3^2 + 5^2))
-ans: 5
-
-5sin(45) + cos(0  # eva will try to autobalance braces
-ans: 3.4999999999999996
+> 1 + sin(30)
+1.5
+> floor(sqrt(3^2 + 5^2))
+5
+> 5sin(45) + cos(0)
+4.535533905932738
 ```
 
 ### operators
@@ -38,20 +36,20 @@ ans: 3.4999999999999996
 fn(x: Number) -> Number
 
 ```
-sin(x) |    
-cos(x) | 
-tan(x) | 
-csc(x) | -> x is in degrees  
-sec(x) | 
-cot(x) | 
-sinh(x)
-cosh(x)
-tanh(x)
-ln(x)     # log to the base e
-log(x)    # log to the base 10
-sqrt(x)   # x ^ 0.5
-ceil(x)
-floor(x)
+sin    
+cos 
+tan 
+csc  
+sec 
+cot 
+sinh
+cosh
+tanh
+ln
+log
+sqrt
+ceil
+floor
 ```
 
 examples:  
@@ -78,9 +76,9 @@ ans: 6
 
 ### todo
 
- - add detailed error handler
+ - ~~add detailed error handler~~
  - multiple arg functions
  - ~~unary operators (minus, plus)~~
  - screenshots
- - lineditor with syntax highlighting
+ - ~~lineditor~~ with syntax highlighting
  - ~~add more functions~~
