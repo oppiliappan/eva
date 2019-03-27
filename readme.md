@@ -33,10 +33,10 @@ type out an expression and hit enter, repeat.
 
 ### functions
 
-fn(x: Number) -> Number
+All trignometric functions expect input in degrees.
 
 ```
-sin    
+sin
 cos 
 tan 
 csc  
@@ -45,11 +45,14 @@ cot
 sinh
 cosh
 tanh
-ln
+ln 
 log
 sqrt
 ceil
 floor
+deg(x) - convert x to degrees
+rad(x) - convert x to radians
+abs(x) - (x * x) ^ 0.5
 ```
 
 examples:  
@@ -77,6 +80,7 @@ ans: 6
 ### todo
 
  - ~~add detailed error handler~~
+ - add support for variables (ans, pi, e)
  - multiple arg functions
  - ~~unary operators (minus, plus)~~
  - screenshots
