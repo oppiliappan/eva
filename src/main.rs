@@ -11,13 +11,21 @@ use crate::error::{ CalcError, handler };
 
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
+use rustyline::config::{ Config, Builder, ColorMode, EditMode };
 
 fn main() {
-let mut rl = Editor::<()>::new();
+    let config_builder = Builder::new();
+    let config = config_builder.color_mode(ColorMode::Enabled)
+        .edit_mode(EditMode::Emacs)
+        .history_ignore_space(true)
+        .max_history_size(1000)
+        .build();
+    let mut rl = Editor::<()>::with_config(config);
     if rl.load_history("history.txt").is_err() {
         println!("No previous history.");
     }
-    'main: loop {
+
+    loop {
         let readline = rl.readline("> ");
         match readline {
             Ok(line) => {
