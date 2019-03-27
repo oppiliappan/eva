@@ -87,6 +87,9 @@ fn get_functions() -> HashMap<&'static str, Token> {
         ("sqrt",  Function::token_from_fn("sqrt".into(), |x| x.sqrt())),
         ("ceil",  Function::token_from_fn("ceil".into(), |x| x.ceil())),
         ("floor", Function::token_from_fn("floor".into(), |x| x.floor())),
+        ("rad",   Function::token_from_fn("rad".into(), |x| x.to_radians())),
+        ("deg",   Function::token_from_fn("deg".into(), |x| x.to_degrees())),
+        ("abs",   Function::token_from_fn("abs".into(), |x| x.abs())),
         // single arg functions can be added here
     ].iter().cloned().collect();
 }
