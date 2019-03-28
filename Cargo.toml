@@ -9,7 +9,7 @@ repository = "https://github.com/nerdypepper/eva"
 readme = "./readme.md"
 keywords = ["calculator", "repl", "math", "cli", "bc"]
 categories = ["command-line-interface", "science", "parser-implementations"]
-license = "GPLv3"
+license = "GPL-3.0-or-later"
 
 [dependencies]
 rustyline = "3.0.0"
