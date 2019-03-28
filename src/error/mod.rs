@@ -11,19 +11,19 @@ pub enum Math {
     OutOfBounds,
 }
 
-pub fn handler(e: CalcError) {
+pub fn handler(e: CalcError) -> String {
     match e {
         CalcError::Math(math_err) => {
             match math_err {
-                Math::DivideByZero => println!("Math Error: Divide by zero error!"),
-                Math::OutOfBounds => println!("Domain Error: Out of bounds!")
+                Math::DivideByZero => format!("Math Error: Divide by zero error!"),
+                Math::OutOfBounds => format!("Domain Error: Out of bounds!")
             }
         },
         CalcError::Syntax(details) => {
-            println!("Syntax Error: {}", details);
+            format!("Syntax Error: {}", details)
         },
         CalcError::Parser(details) => {
-            println!("Parser Error: {}", details);
+            format!("Parser Error: {}", details)
         }
     }
 }
