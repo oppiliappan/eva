@@ -2,6 +2,8 @@
 
 simple calculator REPL, similar to `bc(1)`
 
+![eva.png](https://files.nerdypepper.me/Kt.png)
+
 ### installation
 
 - crates.io
