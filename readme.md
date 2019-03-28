@@ -1,9 +1,15 @@
 # eva
 
-a read-eval-print-loop, similar to `bc(1)`
+simple calculator REPL, similar to `bc(1)`
 
 ### installation
 
+- crates.io
+```shell
+$ cargo install eva
+```
+
+- manual
 ```shell
 $ git clone https://github.com/nerdypepper/eva.git
 $ cargo run
@@ -23,7 +29,7 @@ type out an expression and hit enter, repeat.
 > floor(sqrt(3^2 + 5^2))
 5
 > 5sin(45) + cos(0)
-4.535533905932738
+4.53553
 ```
 
 ### operators
@@ -77,12 +83,20 @@ ceil(sqrt(3^2 + 5^2   # ceil(sqrt(3^2 + 5^2))
 ans: 6
 ```
 
+- super neat error handling
+```
+> 1 + ln(-1)
+Domain Error: Out of bounds!
+```
+
 ### todo
 
- - ~~add detailed error handler~~
  - add support for variables (ans, pi, e)
  - multiple arg functions
- - ~~unary operators (minus, plus)~~
  - screenshots
+ - create logo
+ - ~~unary operators (minus, plus)~~
+ - ~~add detailed error handler~~
+ - ~~add unit tests~~
  - ~~lineditor~~ with syntax highlighting
  - ~~add more functions~~
