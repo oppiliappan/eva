@@ -25,7 +25,7 @@ fn main() {
         let evaled = eval_math_expression(&expr[..]);
         match evaled {
             Ok(ans) => println!("{}", ans),
-            Err(e) => handler(e),
+            Err(e) => eprintln!("{}", handler(e)),
         };
     } else {
         let config_builder = Builder::new();
@@ -47,7 +47,7 @@ fn main() {
                     let evaled = eval_math_expression(&line[..]);
                     match evaled {
                         Ok(ans) => println!("{}", ans),
-                        Err(e) => handler(e),
+                        Err(e) => println!("{}", handler(e)),
                     };
                 },
                 Err(ReadlineError::Interrupted) => {
@@ -96,6 +96,32 @@ fn eval_math_expression(input: &str) -> Result<f64, CalcError> {
     let lexed     = lexer(&input[..])?;
     let postfixed = to_postfix(lexed)?;
     let evaled    = eval_postfix(postfixed)?;
-    Ok(evaled)
+    Ok(format!("{:.*}", 5, evaled).parse::<f64>().unwrap())
 }
 
+
+#[cfg(test)] 
+mod tests {
+    use super::*;
+
+    #[test]
+    fn basic_ops() {
+        let evaled = eval_math_expression("6*2 + 3 + 12 -3").unwrap();
+        assert_eq!(24., evaled);
+    }
+    #[test]
+    fn trignometric_fns() {
+        let evaled = eval_math_expression("sin(30) + tan(45").unwrap();
+        assert_eq!(1.5, evaled);
+    }
+    #[test]
+    fn brackets() {
+        let evaled = eval_math_expression("(((1 + 2 + 3) ^ 2 ) - 4)").unwrap();
+        assert_eq!(32., evaled);
+    }
+    #[test]
+    fn floating_ops() {
+        let evaled = eval_math_expression("1.2816 + 1 + 1.2816/1.2").unwrap();
+        assert_eq!(3.3496, evaled);
+    }
+}
