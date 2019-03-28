@@ -1,3 +1,6 @@
+
+![heroimg.png](https://files.nerdypepper.me/6G.png)
+
 # eva
 
 simple calculator REPL, similar to `bc(1)`
