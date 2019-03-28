@@ -1,3 +1,7 @@
+/* Copyright (C) 2019  Akshay Oppiliappan <nerdypepper@tuta.io>
+ * Refer to LICENCE for more information.
+ * */
+
 #[derive(Debug)]
 pub enum CalcError {
     Math(Math),

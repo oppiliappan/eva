@@ -1,3 +1,7 @@
+/* Copyright (C) 2019  Akshay Oppiliappan <nerdypepper@tuta.io>
+ * Refer to LICENCE for more information.
+ * */
+
 use std::collections::HashMap;
 
 use crate::error::{

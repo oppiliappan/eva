@@ -1,3 +1,7 @@
+/* Copyright (C) 2019  Akshay Oppiliappan <nerdypepper@tuta.io>
+ * Refer to LICENCE for more information.
+ * */
+
 use crate::lex::Token;
 use crate::error::CalcError;
 
