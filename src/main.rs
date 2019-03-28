@@ -1,4 +1,5 @@
 use std::f64;
+use std::env;
 
 mod lex;
 use crate::lex::*;
@@ -11,46 +12,60 @@ use crate::error::{ CalcError, handler };
 
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
-use rustyline::config::{ Config, Builder, ColorMode, EditMode };
+use rustyline::config::{ Builder, ColorMode, EditMode };
+
 
 fn main() {
-    let config_builder = Builder::new();
-    let config = config_builder.color_mode(ColorMode::Enabled)
-        .edit_mode(EditMode::Emacs)
-        .history_ignore_space(true)
-        .max_history_size(1000)
-        .build();
-    let mut rl = Editor::<()>::with_config(config);
-    if rl.load_history("history.txt").is_err() {
-        println!("No previous history.");
-    }
+    let args: Vec<String> = env::args().collect();
+    if args.len() > 1 {
+        let mut expr = String::new();
+        for arg in args[1..].iter() {
+            expr.push_str(&arg[..]);
+        }
+        let evaled = eval_math_expression(&expr[..]);
+        match evaled {
+            Ok(ans) => println!("{}", ans),
+            Err(e) => handler(e),
+        };
+    } else {
+        let config_builder = Builder::new();
+        let config = config_builder.color_mode(ColorMode::Enabled)
+            .edit_mode(EditMode::Emacs)
+            .history_ignore_space(true)
+            .max_history_size(1000)
+            .build();
+        let mut rl = Editor::<()>::with_config(config);
+        if rl.load_history("history.txt").is_err() {
+            println!("No previous history.");
+        }
 
-    loop {
-        let readline = rl.readline("> ");
-        match readline {
-            Ok(line) => {
-                rl.add_history_entry(line.as_ref());
-                let evaled = eval_math_expression(&line[..]);
-                match evaled {
-                    Ok(ans) => println!("{}", ans),
-                    Err(e) => handler(e),
-                };
-            },
-            Err(ReadlineError::Interrupted) => {
-                println!("CTRL-C");
-                break
-            },
-            Err(ReadlineError::Eof) => {
-                println!("CTRL-D");
-                break
-            },
-            Err(err) => {
-                println!("Error: {:?}", err);
-                break
+        loop {
+            let readline = rl.readline("> ");
+            match readline {
+                Ok(line) => {
+                    rl.add_history_entry(line.as_ref());
+                    let evaled = eval_math_expression(&line[..]);
+                    match evaled {
+                        Ok(ans) => println!("{}", ans),
+                        Err(e) => handler(e),
+                    };
+                },
+                Err(ReadlineError::Interrupted) => {
+                    println!("CTRL-C");
+                    break
+                },
+                Err(ReadlineError::Eof) => {
+                    println!("CTRL-D");
+                    break
+                },
+                Err(err) => {
+                    println!("Error: {:?}", err);
+                    break
+                }
             }
         }
+        rl.save_history("history.txt").unwrap();
     }
-    rl.save_history("history.txt").unwrap();
 }
 
 fn autobalance_parens(input: &str) -> Result<String, CalcError> {
