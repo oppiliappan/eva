@@ -1,8 +1,15 @@
 [package]
 name = "eva"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["NerdyPepper <akshayoppiliappan@gmail.com>"]
 edition = "2018"
+description = "Calculator REPL similar to bc(1)"
+homepage = "https://github.com/nerdypepper/eva"
+repository = "https://github.com/nerdypepper/eva"
+readme = "./readme.md"
+keywords = ["calculator", "repl", "math", "cli", "bc"]
+categories = ["command-line-interface", "science", "parser-implementations"]
+license = "GPLv3"
 
 [dependencies]
 rustyline = "3.0.0"
