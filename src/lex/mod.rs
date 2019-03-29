@@ -94,7 +94,13 @@ fn get_functions() -> HashMap<&'static str, Token> {
         ("rad",   Function::token_from_fn("rad".into(), |x| x.to_radians())),
         ("deg",   Function::token_from_fn("deg".into(), |x| x.to_degrees())),
         ("abs",   Function::token_from_fn("abs".into(), |x| x.abs())),
-        // single arg functions can be added here
+        ("asin",  Function::token_from_fn("asin".into(), |x| x.asin())),
+        ("acos",  Function::token_from_fn("acos".into(), |x| x.acos())),
+        ("atan",  Function::token_from_fn("atan".into(), |x| x.atan())),
+        ("acsc",  Function::token_from_fn("acsc".into(), |x| (1./x).asin())),
+        ("asec",  Function::token_from_fn("asec".into(), |x| (1./x).acos())),
+        ("acot",  Function::token_from_fn("acot".into(), |x| (1./x).atan())),
+        // single arg function s can be added here
     ].iter().cloned().collect();
 }
 
@@ -104,6 +110,7 @@ fn get_operators() -> HashMap<char, Token> {
         ('-', Operator::token_from_op('-', |x, y| x - y, 2, true)),
         ('*', Operator::token_from_op('*', |x, y| x * y, 3, true)),
         ('/', Operator::token_from_op('/', |x, y| x / y, 3, true)),
+        ('%', Operator::token_from_op('%', |x, y| x % y, 3, true)),
         ('^', Operator::token_from_op('^', |x, y| x.powf(y) , 4, false)),
     ].iter().cloned().collect();
 }
@@ -157,7 +164,7 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, CalcError> {
                     result.push(Operator::token_from_op('*', |x, y| x * y, 10, true));
                 }
             },
-            '/' | '*' | '^' => {
+            '/' | '*' | '%' | '^' => {
                 drain_num_stack(&mut num_vec, &mut result);
                 let operator_token: Token = operators.get(&letter).unwrap().clone();
                 result.push(operator_token);
