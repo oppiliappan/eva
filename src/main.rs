@@ -60,7 +60,8 @@ fn main() {
 
         loop {
             let readline = rl.readline("> ");
-            match readline {
+            match &readline {
+                Ok(line) if line == "" => continue,
                 Ok(line) => {
                     rl.add_history_entry(line.as_ref());
                     let evaled = eval_math_expression(&line[..]);
