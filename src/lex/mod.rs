@@ -120,6 +120,13 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, CalcError> {
     for letter in input.chars() {
         match letter {
             '0'...'9' | '.' => {
+                if char_vec.len() > 0 {
+                    if let Some(_) = functions.get(&char_vec[..]) {
+                        return Err(CalcError::Syntax(format!("Function '{}' expected parentheses", char_vec)))
+                    } else {
+                        return Err(CalcError::Syntax(format!("Unexpected character '{}'", char_vec)))
+                    }
+                }
                 num_vec.push(letter);
                 last_char_is_op = false; 
             },
