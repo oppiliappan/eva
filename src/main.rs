@@ -150,4 +150,9 @@ mod tests {
         let evaled = eval_math_expression("1.2816 + 1 + 1.2816/1.2").unwrap();
         assert_eq!(3.3496, evaled);
     }
+    #[test]
+    fn inverse_trignometric_fns() {
+        let evaled = eval_math_expression("deg(asin(1) + acos(1))").unwrap();
+        assert_eq!(90., evaled);
+    }
 }
