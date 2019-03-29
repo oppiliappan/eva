@@ -35,6 +35,7 @@ use rustyline::config::{ Builder, ColorMode, EditMode };
 
 
 fn main() {
+
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
         let mut expr = String::new();
@@ -114,6 +115,9 @@ fn autobalance_parens(input: &str) -> Result<String, CalcError> {
 }
 
 fn eval_math_expression(input: &str) -> Result<f64, CalcError> {
+    if input.len() == 0 {
+        return Ok(0.)
+    }
     let input     = autobalance_parens(&input[..])?;
     let lexed     = lexer(&input[..])?;
     let postfixed = to_postfix(lexed)?;
