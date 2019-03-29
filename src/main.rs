@@ -44,7 +44,10 @@ fn main() {
         let evaled = eval_math_expression(&expr[..]);
         match evaled {
             Ok(ans) => println!("{}", ans),
-            Err(e) => eprintln!("{}", handler(e)),
+            Err(e) => {
+                eprintln!("{}", handler(e));
+                std::process::exit(1);
+            },
         };
     } else {
         let config_builder = Builder::new();
