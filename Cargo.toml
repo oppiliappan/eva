@@ -1,6 +1,6 @@
 [package]
 name = "eva"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["NerdyPepper <akshayoppiliappan@gmail.com>"]
 edition = "2018"
 description = "Calculator REPL similar to bc(1)"
