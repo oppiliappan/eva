@@ -17,34 +17,39 @@
 
  */
 
+// std
 use std::f64;
-use std::env;
 
+// modules
 mod lex;
 use crate::lex::*;
-
 mod parse;
 use crate::parse::*;
-
 mod error;
 use crate::error::{ CalcError, handler };
 
+// extern crates
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 use rustyline::config::{ Builder, ColorMode, EditMode };
+use clap::{Arg, App};
+use lazy_static::lazy_static;
 
+struct Configuration {
+    radian_mode: bool,
+    fix: usize,
+    input: String
+}
+
+lazy_static! {
+    static ref CONFIGURATION: Configuration =  parse_arguments();
+}
 
 fn main() {
-
-    let args: Vec<String> = env::args().collect();
-    if args.len() > 1 {
-        let mut expr = String::new();
-        for arg in args[1..].iter() {
-            expr.push_str(&arg[..]);
-        }
-        let evaled = eval_math_expression(&expr[..]);
+    if CONFIGURATION.input.len() > 0 {
+        let evaled = eval_math_expression(&CONFIGURATION.input[..]);
         match evaled {
-            Ok(ans) => println!("{}", ans),
+            Ok(ans) => println!("{:.*}", CONFIGURATION.fix, ans),
             Err(e) => {
                 eprintln!("{}", handler(e));
                 std::process::exit(1);
@@ -69,7 +74,7 @@ fn main() {
                     rl.add_history_entry(line.as_ref());
                     let evaled = eval_math_expression(&line[..]);
                     match evaled {
-                        Ok(ans) => println!("{}", ans),
+                        Ok(ans) => println!("{:.*}", CONFIGURATION.fix, ans),
                         Err(e) => println!("{}", handler(e)),
                     };
                 },
@@ -88,6 +93,40 @@ fn main() {
             }
         }
         rl.save_history("history.txt").unwrap();
+    }
+}
+
+fn parse_arguments() -> Configuration {
+    let config = App::new(env!("CARGO_PKG_NAME"))
+        .version(env!("CARGO_PKG_VERSION"))
+        .author(env!("CARGO_PKG_AUTHORS"))
+        .about(env!("CARGO_PKG_DESCRIPTION"))
+        .arg(Arg::with_name("fix")
+             .short("f")
+             .long("fix")
+             .takes_value(true)
+             .value_name("FIX")
+             .help("set number of decimal places in the output"))
+        .arg(Arg::with_name("INPUT")
+             .help("optional expression string to run eva in command mode")
+             .index(1))
+        .arg(Arg::with_name("radian")
+             .short("r")
+             .long("radian")
+             .help("set eva to radian mode"))
+        .get_matches();
+
+    let mut input = String::new();
+    if let Some(i) = config.value_of("input") {
+        input.push_str(i);
+    }; 
+    Configuration {
+        radian_mode: config.is_present("radian"),
+        fix: config.value_of("fix")
+            .unwrap_or("10")
+            .parse()
+            .unwrap(),
+        input,
     }
 }
 
@@ -115,6 +154,8 @@ fn autobalance_parens(input: &str) -> Result<String, CalcError> {
 }
 
 fn eval_math_expression(input: &str) -> Result<f64, CalcError> {
+    let input = input.trim();
+    let input = input.replace(" ", "");
     if input.len() == 0 {
         return Ok(0.)
     }
@@ -122,9 +163,8 @@ fn eval_math_expression(input: &str) -> Result<f64, CalcError> {
     let lexed     = lexer(&input[..])?;
     let postfixed = to_postfix(lexed)?;
     let evaled    = eval_postfix(postfixed)?;
-    Ok(format!("{:.*}", 5, evaled).parse::<f64>().unwrap())
+    Ok(evaled)
 }
-
 
 #[cfg(test)] 
 mod tests {
