@@ -4,6 +4,8 @@
 
 use std::collections::HashMap;
 
+use crate::CONFIGURATION;
+
 use crate::error::{
     CalcError,
     Math
@@ -77,12 +79,12 @@ pub enum Token {
 
 fn get_functions() -> HashMap<&'static str, Token> {
     return [
-        ("sin",   Function::token_from_fn("sin".into(), |x| x.to_radians().sin())),
-        ("cos",   Function::token_from_fn("cos".into(), |x| x.to_radians().cos())),
-        ("tan",   Function::token_from_fn("tan".into(), |x| x.to_radians().tan())),
-        ("csc",   Function::token_from_fn("csc".into(), |x| x.to_radians().sin().recip())),
-        ("sec",   Function::token_from_fn("sec".into(), |x| x.to_radians().cos().recip())),
-        ("cot",   Function::token_from_fn("cot".into(), |x| x.to_radians().tan().recip())),
+        ("sin",   Function::token_from_fn("sin".into(), |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin())),
+        ("cos",   Function::token_from_fn("cos".into(), |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos())),
+        ("tan",   Function::token_from_fn("tan".into(), |x| is_radian_mode(x, CONFIGURATION.radian_mode).tan())),
+        ("csc",   Function::token_from_fn("csc".into(), |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin().recip())),
+        ("sec",   Function::token_from_fn("sec".into(), |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos().recip())),
+        ("cot",   Function::token_from_fn("cot".into(), |x| is_radian_mode(x, CONFIGURATION.radian_mode).tan().recip())),
         ("sinh",  Function::token_from_fn("sinh".into(), |x| x.sinh())),
         ("cosh",  Function::token_from_fn("cosh".into(), |x| x.cosh())),
         ("tanh",  Function::token_from_fn("tanh".into(), |x| x.tanh())),
@@ -218,5 +220,13 @@ fn drain_num_stack(num_vec: &mut String, result: &mut Vec<Token>) {
     if let Some(x) = parse_num {
         result.push(Token::Num(x));
         num_vec.clear();
+    }
+}
+
+fn is_radian_mode(x: f64, is_radian: bool) -> f64 {
+    if is_radian {
+        return x
+    } else {
+        x.to_radians()
     }
 }
