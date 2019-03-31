@@ -117,7 +117,7 @@ fn parse_arguments() -> Configuration {
         .get_matches();
 
     let mut input = String::new();
-    if let Some(i) = config.value_of("input") {
+    if let Some(i) = config.value_of("INPUT") {
         input.push_str(i);
     }; 
     Configuration {
