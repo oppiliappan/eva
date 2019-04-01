@@ -79,34 +79,34 @@ pub enum Token {
 
 fn get_functions() -> HashMap<&'static str, Token> {
     return [
-        ("sin",   Function::token_from_fn("sin".into(), |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin())),
-        ("cos",   Function::token_from_fn("cos".into(), |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos())),
-        ("tan",   Function::token_from_fn("tan".into(), |x| is_radian_mode(x, CONFIGURATION.radian_mode).tan())),
-        ("csc",   Function::token_from_fn("csc".into(), |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin().recip())),
-        ("sec",   Function::token_from_fn("sec".into(), |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos().recip())),
-        ("cot",   Function::token_from_fn("cot".into(), |x| is_radian_mode(x, CONFIGURATION.radian_mode).tan().recip())),
-        ("sinh",  Function::token_from_fn("sinh".into(), |x| x.sinh())),
-        ("cosh",  Function::token_from_fn("cosh".into(), |x| x.cosh())),
-        ("tanh",  Function::token_from_fn("tanh".into(), |x| x.tanh())),
-        ("ln",    Function::token_from_fn("ln".into(), |x| x.ln())),
-        ("log",   Function::token_from_fn("log".into(), |x| x.log10())),
-        ("sqrt",  Function::token_from_fn("sqrt".into(), |x| x.sqrt())),
-        ("ceil",  Function::token_from_fn("ceil".into(), |x| x.ceil())),
+        ("sin",   Function::token_from_fn("sin".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin())),
+        ("cos",   Function::token_from_fn("cos".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos())),
+        ("tan",   Function::token_from_fn("tan".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).tan())),
+        ("csc",   Function::token_from_fn("csc".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin().recip())),
+        ("sec",   Function::token_from_fn("sec".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos().recip())),
+        ("cot",   Function::token_from_fn("cot".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).tan().recip())),
+        ("sinh",  Function::token_from_fn("sinh".into(),  |x| x.sinh())),
+        ("cosh",  Function::token_from_fn("cosh".into(),  |x| x.cosh())),
+        ("tanh",  Function::token_from_fn("tanh".into(),  |x| x.tanh())),
+        ("ln",    Function::token_from_fn("ln".into(),    |x| x.ln())),
+        ("log",   Function::token_from_fn("log".into(),   |x| x.log10())),
+        ("sqrt",  Function::token_from_fn("sqrt".into(),  |x| x.sqrt())),
+        ("ceil",  Function::token_from_fn("ceil".into(),  |x| x.ceil())),
         ("floor", Function::token_from_fn("floor".into(), |x| x.floor())),
-        ("rad",   Function::token_from_fn("rad".into(), |x| x.to_radians())),
-        ("deg",   Function::token_from_fn("deg".into(), |x| x.to_degrees())),
-        ("abs",   Function::token_from_fn("abs".into(), |x| x.abs())),
-        ("asin",  Function::token_from_fn("asin".into(), |x| x.asin())),
-        ("acos",  Function::token_from_fn("acos".into(), |x| x.acos())),
-        ("atan",  Function::token_from_fn("atan".into(), |x| x.atan())),
-        ("acsc",  Function::token_from_fn("acsc".into(), |x| (1./x).asin())),
-        ("asec",  Function::token_from_fn("asec".into(), |x| (1./x).acos())),
-        ("acot",  Function::token_from_fn("acot".into(), |x| (1./x).atan())),
+        ("rad",   Function::token_from_fn("rad".into(),   |x| x.to_radians())),
+        ("deg",   Function::token_from_fn("deg".into(),   |x| x.to_degrees())),
+        ("abs",   Function::token_from_fn("abs".into(),   |x| x.abs())),
+        ("asin",  Function::token_from_fn("asin".into(),  |x| x.asin())),
+        ("acos",  Function::token_from_fn("acos".into(),  |x| x.acos())),
+        ("atan",  Function::token_from_fn("atan".into(),  |x| x.atan())),
+        ("acsc",  Function::token_from_fn("acsc".into(),  |x| (1./x).asin())),
+        ("asec",  Function::token_from_fn("asec".into(),  |x| (1./x).acos())),
+        ("acot",  Function::token_from_fn("acot".into(),  |x| (1./x).atan())),
         // single arg function s can be added here
     ].iter().cloned().collect();
 }
 
-fn get_operators() -> HashMap<char, Token> {
+pub fn get_operators() -> HashMap<char, Token> {
     return [
         ('+', Operator::token_from_op('+', |x, y| x + y, 2, true)),
         ('-', Operator::token_from_op('-', |x, y| x - y, 2, true)),
@@ -114,7 +114,12 @@ fn get_operators() -> HashMap<char, Token> {
         ('/', Operator::token_from_op('/', |x, y| x / y, 3, true)),
         ('%', Operator::token_from_op('%', |x, y| x % y, 3, true)),
         ('^', Operator::token_from_op('^', |x, y| x.powf(y) , 4, false)),
+        ('!', Operator::token_from_op('!', |x, _| factorial(x) , 4, true)),
     ].iter().cloned().collect();
+}
+
+fn factorial (n: f64) -> f64 {
+        n.signum() * (1.. n.abs() as u64 +1).fold(1, |p, n| p*n) as f64
 }
 
 pub fn lexer(input: &str) -> Result<Vec<Token>, CalcError> {
@@ -166,11 +171,15 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, CalcError> {
                     result.push(Operator::token_from_op('*', |x, y| x * y, 10, true));
                 }
             },
-            '/' | '*' | '%' | '^' => {
+            '/' | '*' | '%' | '^' | '!' => {
                 drain_num_stack(&mut num_vec, &mut result);
                 let operator_token: Token = operators.get(&letter).unwrap().clone();
                 result.push(operator_token);
                 last_char_is_op = true; 
+                if letter == '!' {
+                    result.push(Token::Num(1.));
+                    last_char_is_op = false; 
+                }
             },
             '('  => {
                 if char_vec.len() > 0 {
