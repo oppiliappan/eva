@@ -11,3 +11,4 @@ Cargo.lock
 
 # ignore history used by rustyline
 history.txt
+./.idea

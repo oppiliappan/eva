@@ -49,7 +49,7 @@ fn main() {
     if CONFIGURATION.input.len() > 0 {
         let evaled = eval_math_expression(&CONFIGURATION.input[..]);
         match evaled {
-            Ok(ans) => println!("{:.*}", CONFIGURATION.fix, ans),
+            Ok(ans) => pprint(ans),
             Err(e) => {
                 eprintln!("{}", handler(e));
                 std::process::exit(1);
@@ -74,7 +74,7 @@ fn main() {
                     rl.add_history_entry(line.as_ref());
                     let evaled = eval_math_expression(&line[..]);
                     match evaled {
-                        Ok(ans) => println!("{:.*}", CONFIGURATION.fix, ans),
+                        Ok(ans) => pprint(ans),
                         Err(e) => println!("{}", handler(e)),
                     };
                 },
@@ -94,6 +94,10 @@ fn main() {
         }
         rl.save_history("history.txt").unwrap();
     }
+}
+
+fn pprint(ans: f64) {
+    println!("{a:width$}", width = CONFIGURATION.fix, a = ans)
 }
 
 fn parse_arguments() -> Configuration {
@@ -119,7 +123,7 @@ fn parse_arguments() -> Configuration {
     let mut input = String::new();
     if let Some(i) = config.value_of("INPUT") {
         input.push_str(i);
-    }; 
+    };
     Configuration {
         radian_mode: config.is_present("radian"),
         fix: config.value_of("fix")
@@ -166,7 +170,7 @@ fn eval_math_expression(input: &str) -> Result<f64, CalcError> {
     Ok(evaled)
 }
 
-#[cfg(test)] 
+#[cfg(test)]
 mod tests {
     use super::*;
 
