@@ -97,7 +97,47 @@ fn main() {
 }
 
 fn pprint(ans: f64) {
-    println!("{a:width$}", width = CONFIGURATION.fix, a = ans)
+    // remove "-" char to add it later
+    let negative = ans < 0.0;
+    let ans = ans.abs();
+
+    let mut result_string = String::new();
+    let frac_part = ans.fract();
+    let i_part = ans - frac_part;
+
+    for (i,c) in i_part.to_string().chars().rev().enumerate(){
+        if i % 3 == 0 && i != 0{
+            result_string.push_str(",");
+            result_string.push(c);
+            continue
+        }
+        result_string.push(c)
+    }
+
+    if negative {
+        result_string.push_str("-")
+    }
+    // Add whitespaces to fit
+    let mut integer_part_len = result_string.len();
+
+    let arrange:i16 = CONFIGURATION.fix as i16 - integer_part_len as i16;
+
+    if arrange > 0 {
+        result_string.push_str(" ".repeat(arrange as usize).as_str())
+    }
+    // --------------------------------------
+    // All below is writen because.
+    // float_number.to_string() printed as 123.321 -> 123.32099999999999795
+    let mut reverse_ans = result_string.chars().rev().collect::<String>();
+    if negative {
+        integer_part_len -= 1
+    }
+    if frac_part > 0.0{
+        let f_str = format!("{}",ans);
+        reverse_ans.push_str(&f_str[integer_part_len..]);
+    }
+
+    println!("{}", reverse_ans)
 }
 
 fn parse_arguments() -> Configuration {
