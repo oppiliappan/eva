@@ -1,20 +1,7 @@
 /*
-    eva - an easy to use calculator REPL similar to bc(1)
-    Copyright (C) 2019  Akshay Oppiliappan <nerdypepper@tuta.io>
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+ *  eva - an easy to use calculator REPL similar to bc(1)
+ *  Copyright (C) 2019  Akshay Oppiliappan <nerdypepper@tuta.io>
+ *
  */
 
 // std
@@ -97,25 +84,24 @@ fn main() {
 }
 
 fn pprint(ans: f64) {
-    let ans_string = format!("{}",ans);
-
+    let ans_string = format!("{:.*}", CONFIGURATION.fix, ans);
     let ans_vector: Vec<&str> = ans_string.split(".").collect();
     match ans_vector.len() {
-        1 => println!("{}",thousand_sep(ans_vector[0])),
-        2 => println!("{}.{}",thousand_sep(ans_vector[0]),ans_vector[1]),
+        1 => println!("{}", thousand_sep(ans_vector[0])),
+        2 => println!("{}.{}", thousand_sep(ans_vector[0]),ans_vector[1]),
         _ => ()
     }
 }
 
-fn thousand_sep(inp:&str) -> String{
+fn thousand_sep(inp:&str) -> String {
     let mut result_string = String::new();
     for (i,c) in inp.to_string().chars().rev().enumerate(){
         if i % 3 == 0 && i != 0 && c.to_string() != "-"{
-            result_string.push_str(",");
+            result_string.push(',');
         }
         result_string.push(c)
     }
-    let arrange:i16 = CONFIGURATION.fix as i16 - result_string.len() as i16;
+    let arrange = 10_usize - result_string.len() as usize;
 
     if arrange > 0 {
         result_string.push_str(" ".repeat(arrange as usize).as_str())
