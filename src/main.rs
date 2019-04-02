@@ -111,11 +111,11 @@ fn thousand_sep(inp:&str) -> String{
     let mut result_string = String::new();
     for (i,c) in inp.to_string().chars().rev().enumerate(){
         if i % 3 == 0 && i != 0 && c.to_string() != "-"{
-            result_string.push_str(",");
+            result_string = format!("{}{}",result_string,",")
         }
-        result_string.push(c)
+        result_string = format!("{}{}",result_string,c)
     }
-    let arrange:i16 = CONFIGURATION.fix as i16 - result_string.len() as i16;
+    let arrange:i16 = 10i16 - result_string.len() as i16;
 
     if arrange > 0 {
         result_string.push_str(" ".repeat(arrange as usize).as_str())
