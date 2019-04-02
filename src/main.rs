@@ -87,24 +87,19 @@ fn pprint(ans: f64) {
     let ans_string = format!("{:.*}", CONFIGURATION.fix, ans);
     let ans_vector: Vec<&str> = ans_string.split(".").collect();
     match ans_vector.len() {
-        1 => println!("{}", thousand_sep(ans_vector[0])),
-        2 => println!("{}.{}", thousand_sep(ans_vector[0]),ans_vector[1]),
+        1 => println!("{:>10}", thousand_sep(ans_vector[0])),
+        2 => println!("{:>10}.{}", thousand_sep(ans_vector[0]),ans_vector[1]),
         _ => ()
     }
 }
 
-fn thousand_sep(inp:&str) -> String {
+fn thousand_sep(inp: &str) -> String {
     let mut result_string = String::new();
     for (i,c) in inp.to_string().chars().rev().enumerate(){
         if i % 3 == 0 && i != 0 && c.to_string() != "-"{
             result_string.push(',');
         }
         result_string.push(c)
-    }
-    let arrange = 10_usize - result_string.len() as usize;
-
-    if arrange > 0 {
-        result_string.push_str(" ".repeat(arrange as usize).as_str())
     }
     result_string.chars().rev().collect::<String>()
 }
