@@ -112,8 +112,6 @@ fn thousand_sep(inp:&str) -> String{
     for (i,c) in inp.to_string().chars().rev().enumerate(){
         if i % 3 == 0 && i != 0 && c.to_string() != "-"{
             result_string.push_str(",");
-            result_string.push(c);
-            continue
         }
         result_string.push(c)
     }
