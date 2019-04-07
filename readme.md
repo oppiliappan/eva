@@ -23,7 +23,23 @@ $ cargo run
 ### usage
 
 ```shell
-$ eva
+eva 0.2.3
+NerdyPepper <akshayoppiliappan@gmail.com>
+Calculator REPL similar to bc(1)
+
+USAGE:
+    eva [FLAGS] [OPTIONS] [INPUT]
+
+FLAGS:
+    -h, --help       Prints help information
+    -r, --radian     set eva to radian mode
+    -V, --version    Prints version information
+
+OPTIONS:
+    -f, --fix <FIX>    set number of decimal places in the output
+
+ARGS:
+    <INPUT>    optional expression string to run eva in command mode
 ```
 
 type out an expression and hit enter, repeat.
@@ -47,23 +63,12 @@ type out an expression and hit enter, repeat.
 All trignometric functions expect input in degrees.
 
 ```
-sin
-cos 
-tan 
-csc  
-sec 
-cot 
-sinh
-cosh
-tanh
-ln 
-log
-sqrt
-ceil
-floor
+sin    cos     tan    csc    sec    cot    sinh   cosh   tanh
+asin   acos    atan   acsc   asec   acot   ln     log    sqrt
+ceil   floor   abs
+
 deg(x) - convert x to degrees
 rad(x) - convert x to radians
-abs(x) - (x * x) ^ 0.5
 ```
 
 examples:  
@@ -78,14 +83,14 @@ log(100)      # yes
 
  - auto insertion of `*` operator
 ```
-12sin(45(2))  # 12 * sin(45 * (2))
-ans: 12
+>12sin(45(2))             # 12 * sin(45 * (2))
+12
 ```
 
  - auto balancing of parentheses
 ```
-ceil(sqrt(3^2 + 5^2   # ceil(sqrt(3^2 + 5^2))
-ans: 6
+>ceil(sqrt(3^2 + 5^2      # ceil(sqrt(3^2 + 5^2))
+6
 ```
 
 - super neat error handling
@@ -98,8 +103,8 @@ Domain Error: Out of bounds!
 
  - add support for variables (ans, pi, e)
  - multiple arg functions
- - screenshots
- - create logo
+ - ~~screenshots~~
+ - ~~create logo~~
  - ~~unary operators (minus, plus)~~
  - ~~add detailed error handler~~
  - ~~add unit tests~~
