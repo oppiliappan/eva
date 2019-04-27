@@ -85,13 +85,49 @@ fn main() {
 }
 
 fn pprint(ans: f64) {
-    let ans_string = format!("{:.*}", CONFIGURATION.fix, ans);
+    let ans_string = radix_fmt(ans, CONFIGURATION.base).unwrap();
     let ans_vector: Vec<&str> = ans_string.split(".").collect();
     match ans_vector.len() {
         1 => println!("{:>10}", thousand_sep(ans_vector[0])),
         2 => println!("{:>10}.{}", thousand_sep(ans_vector[0]),ans_vector[1]),
         _ => ()
     }
+}
+
+fn radix_fmt(number: f64, obase: usize) -> Result<String, CalcError> {
+    if obase > 36 {
+        return Err(CalcError::Syntax("Unknown base".into()));
+    }
+
+    let table: Vec<char> = "0123456789abcdefghijklmnopqrstuvwxyz".chars().collect();
+
+    // format integral part of float
+    let mut integral = number.trunc() as i64;
+    let mut obase_int = String::new();
+    while integral >= obase as i64 {
+        obase_int.push(table[(integral % obase as i64) as usize]);
+        integral /= obase as i64;
+    }
+    obase_int.push(table[integral as usize]);
+    if number.is_sign_negative() {
+        obase_int.push('-');
+    }
+    let obase_int = obase_int.chars().rev().collect::<String>();
+
+    // format fractional part of float
+    let mut fract = number.abs().fract();
+    let mut obase_fract = String::new();
+    let mut i = 0;
+    loop {
+        fract *= obase as f64;
+        obase_fract.push(table[fract.trunc() as usize]);
+        i += 1;
+        if fract.fract() == 0. || i > 10 {
+            break;
+        }
+        fract = fract.fract();
+    }
+    Ok(format!("{}.{}", obase_int, obase_fract))
 }
 
 fn thousand_sep(inp: &str) -> String {
@@ -178,11 +214,12 @@ fn eval_math_expression(input: &str) -> Result<f64, CalcError> {
     if input.len() == 0 {
         return Ok(0.)
     }
-    let input     = autobalance_parens(&input[..])?;
-    let lexed     = lexer(&input[..])?;
-    let postfixed = to_postfix(lexed)?;
-    let evaled    = eval_postfix(postfixed)?;
-    Ok(evaled)
+    let input        = autobalance_parens(&input[..])?;
+    let lexed        = lexer(&input[..])?;
+    let postfixed    = to_postfix(lexed)?;
+    let evaled       = eval_postfix(postfixed)?;
+    let evaled_fixed = format!("{:.*}", CONFIGURATION.fix, evaled).parse::<f64>().unwrap();
+    Ok(evaled_fixed)
 }
 
 #[cfg(test)]
