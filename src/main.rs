@@ -25,6 +25,7 @@ use lazy_static::lazy_static;
 struct Configuration {
     radian_mode: bool,
     fix: usize,
+    base: usize,
     input: String
 }
 
@@ -115,6 +116,12 @@ fn parse_arguments() -> Configuration {
              .takes_value(true)
              .value_name("FIX")
              .help("set number of decimal places in the output"))
+        .arg(Arg::with_name("base")
+             .short("b")
+             .long("base")
+             .takes_value(true)
+             .value_name("RADIX")
+             .help("set the radix of calculation output (2, 8, 10, 16 etc.)"))
         .arg(Arg::with_name("INPUT")
              .help("optional expression string to run eva in command mode")
              .index(1))
@@ -131,6 +138,10 @@ fn parse_arguments() -> Configuration {
     Configuration {
         radian_mode: config.is_present("radian"),
         fix: config.value_of("fix")
+            .unwrap_or("10")
+            .parse()
+            .unwrap(),
+        base: config.value_of("base")
             .unwrap_or("10")
             .parse()
             .unwrap(),
