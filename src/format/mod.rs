@@ -55,7 +55,7 @@ fn radix_fmt(number: f64, obase: usize) -> Result<String, CalcError> {
         fract *= obase as f64;
         obase_fract.push(table[fract.trunc() as usize]);
         i += 1;
-        if fract.fract() == 0. || i > 10 {
+        if fract.fract() == 0. || i >= CONFIGURATION.fix {
             break;
         }
         fract = fract.fract();
