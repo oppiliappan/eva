@@ -132,8 +132,8 @@ fn radix_fmt(number: f64, obase: usize) -> Result<String, CalcError> {
 
 fn thousand_sep(inp: &str) -> String {
     let mut result_string = String::new();
-    for (i,c) in inp.to_string().chars().rev().enumerate(){
-        if i % 3 == 0 && i != 0 && c.to_string() != "-"{
+    for (i,c) in inp.to_string().chars().rev().enumerate() {
+        if i % 3 == 0 && i != 0 && c.to_string() != "-" {
             result_string.push(',');
         }
         result_string.push(c)
