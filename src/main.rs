@@ -61,7 +61,7 @@ fn main() {
             let readline = rl.readline("> ");
             match readline {
                 Ok(line) => {
-                    rl.add_history_entry(line.as_ref());
+                    rl.add_history_entry(line.as_str());
                     let evaled = eval_math_expression(&line[..]);
                     match evaled {
                         Ok(ans) => pprint(ans),
