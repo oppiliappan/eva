@@ -6,6 +6,7 @@
 
 // std
 use std::f64;
+use std::borrow::Cow::{self, Borrowed, Owned};
 
 // modules
 mod lex;
@@ -19,10 +20,12 @@ use crate::format::*;
 
 // extern crates
 use rustyline::error::ReadlineError;
-use rustyline::Editor;
+use rustyline::{ Editor, Context, Helper };
 use rustyline::config::{ Builder, ColorMode, EditMode, CompletionType };
+use rustyline::hint::Hinter;
+use rustyline::completion::{ FilenameCompleter, Completer, Pair };
 use rustyline::highlight::{ Highlighter, MatchingBracketHighlighter };
-use rustyline::hint::{ Hinter, HistoryHinter };
+
 use clap::{Arg, App};
 use lazy_static::lazy_static;
 
