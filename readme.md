@@ -23,7 +23,7 @@ $ cargo run
 ### usage
 
 ```shell
-eva 0.2.3
+eva 0.2.4
 NerdyPepper <akshayoppiliappan@gmail.com>
 Calculator REPL similar to bc(1)
 
@@ -36,10 +36,12 @@ FLAGS:
     -V, --version    Prints version information
 
 OPTIONS:
-    -f, --fix <FIX>    set number of decimal places in the output
+    -b, --base <RADIX>    set the radix of calculation output (2, 8, 10, 16 etc.)
+    -f, --fix <FIX>       set number of decimal places in the output
 
 ARGS:
     <INPUT>    optional expression string to run eva in command mode
+
 ```
 
 type out an expression and hit enter, repeat.

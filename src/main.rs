@@ -20,9 +20,13 @@ use crate::format::*;
 // extern crates
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
-use rustyline::config::{ Builder, ColorMode, EditMode };
+use rustyline::config::{ Builder, ColorMode, EditMode, CompletionType };
+use rustyline::highlight::{ Highlighter, MatchingBracketHighlighter };
+use rustyline::hint::{ Hinter, HistoryHinter };
 use clap::{Arg, App};
 use lazy_static::lazy_static;
+
+struct LineHelper (MatchingBracketHighlighter, HistoryHinter);
 
 struct Configuration {
     radian_mode: bool,
@@ -50,6 +54,7 @@ fn main() {
         let config = config_builder.color_mode(ColorMode::Enabled)
             .edit_mode(EditMode::Emacs)
             .history_ignore_space(true)
+            .completion_type(CompletionType::Circular)
             .max_history_size(1000)
             .build();
         let mut rl = Editor::<()>::with_config(config);
@@ -102,7 +107,7 @@ fn parse_arguments() -> Configuration {
              .long("base")
              .takes_value(true)
              .value_name("RADIX")
-             .help("set the radix of calculation output (2, 8, 10, 16 etc.)"))
+             .help("set the radix of calculation output (1 - 36)"))
         .arg(Arg::with_name("INPUT")
              .help("optional expression string to run eva in command mode")
              .index(1))
