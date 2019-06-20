@@ -35,7 +35,7 @@ fn radix_fmt(number: f64, obase: usize) -> Result<String, CalcError> {
     let table: Vec<char> = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().collect();
 
     // format integral part of float
-    let mut integral = number.trunc() as i64;
+    let mut integral = number.abs().trunc() as i64;
     let mut obase_int = String::new();
     while integral >= obase as i64 {
         obase_int.push(table[(integral % obase as i64) as usize]);
