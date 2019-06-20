@@ -47,7 +47,7 @@ impl Hinter for AnswerHinter {
         }
         let dry_run = eval_math_expression(&input);
         match dry_run {
-            Ok(ans) =>  return Some(format!("\x1b[90m = {}\x1b[0m", ans)),
+            Ok(ans) =>  return Some(format!(" = {}", ans)),
             Err(_) => return Some(format!(""))
         };
     }
@@ -59,7 +59,7 @@ impl Highlighter for RLHelper {
     }
 
     fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
-        Owned("\x1b[1m".to_owned() + hint + "\x1b[m")
+        Owned("\x1b[90m".to_owned() + hint + "\x1b[0m")
     }
 
     fn highlight<'l>(&self, line: &'l str, pos: usize) -> Cow<'l, str> {
