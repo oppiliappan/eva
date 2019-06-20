@@ -32,12 +32,11 @@ use lazy_static::lazy_static;
 
 struct RLHelper {
     completer: FilenameCompleter,
-    highlighter: MatchingBracketHighlighter,
+    highlighter: LineHighlighter,
     hinter: AnswerHinter,
 }
 
 struct AnswerHinter { }
-
 impl Hinter for AnswerHinter {
     fn hint(&self, line: &str, _: usize, _: &Context) -> Option<String> {
         let input = line.trim();
@@ -53,21 +52,26 @@ impl Hinter for AnswerHinter {
     }
 }
 
-impl Highlighter for RLHelper {
-    fn highlight_prompt<'p>(&self, prompt: &'p str) -> Cow<'p, str> {
-        Owned(String::from(prompt))
-    }
-
+struct LineHighlighter { }
+impl Highlighter for LineHighlighter {
     fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
-        Owned("\x1b[90m".to_owned() + hint + "\x1b[0m")
+        Owned(format!("\x1b[90m{}\x1b[0m", hint))
     }
+    fn highlight<'l>(&self, line: &'l str, _: usize) -> Cow<'l, str> {
+        let op = eval_math_expression(line);
+        match op {
+            Ok(_) => Owned(line.into()),
+            Err(_) => Owned(format!("\x1b[31m{}\x1b[0m", line))
+        }
+    }
+}
 
+impl Highlighter for RLHelper { 
+    fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
+        self.highlighter.highlight_hint(hint)
+    }
     fn highlight<'l>(&self, line: &'l str, pos: usize) -> Cow<'l, str> {
         self.highlighter.highlight(line, pos)
-    }
-
-    fn highlight_char(&self, line: &str, pos: usize) -> bool {
-        self.highlighter.highlight_char(line, pos)
     }
 }
 
@@ -123,7 +127,7 @@ fn main() {
         let mut rl = Editor::with_config(config);
         let h = RLHelper {
             completer: FilenameCompleter::new(),
-            highlighter: MatchingBracketHighlighter::new(),
+            highlighter: LineHighlighter {},
             hinter: AnswerHinter {}
         };
         rl.set_helper(Some(h));
