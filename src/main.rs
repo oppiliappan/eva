@@ -6,6 +6,7 @@
 
 // std
 use std::f64;
+use std::borrow::Cow::{self, Borrowed, Owned};
 
 // modules
 mod lex;
@@ -19,14 +20,80 @@ use crate::format::*;
 
 // extern crates
 use rustyline::error::ReadlineError;
-use rustyline::Editor;
+use rustyline::{ Editor, Context, Helper };
 use rustyline::config::{ Builder, ColorMode, EditMode, CompletionType };
+use rustyline::hint::Hinter;
+use rustyline::completion::{ FilenameCompleter, Completer, Pair };
 use rustyline::highlight::{ Highlighter, MatchingBracketHighlighter };
-use rustyline::hint::{ Hinter, HistoryHinter };
+
 use clap::{Arg, App};
 use lazy_static::lazy_static;
 
-struct LineHelper (MatchingBracketHighlighter, HistoryHinter);
+
+struct RLHelper {
+    completer: FilenameCompleter,
+    highlighter: LineHighlighter,
+    hinter: AnswerHinter,
+}
+
+struct AnswerHinter { }
+impl Hinter for AnswerHinter {
+    fn hint(&self, line: &str, _: usize, _: &Context) -> Option<String> {
+        let input = line.trim();
+        let input = input.replace(" ", "");
+        if input.len() == 0 {
+            return Some("".into())
+        }
+        let dry_run = eval_math_expression(&input);
+        match dry_run {
+            Ok(ans) =>  return Some(format!(" = {}", ans)),
+            Err(_) => return Some(format!(""))
+        };
+    }
+}
+
+struct LineHighlighter { }
+impl Highlighter for LineHighlighter {
+    fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
+        Owned(format!("\x1b[90m{}\x1b[0m", hint))
+    }
+    fn highlight<'l>(&self, line: &'l str, _: usize) -> Cow<'l, str> {
+        let op = eval_math_expression(line);
+        match op {
+            Ok(_) => Owned(line.into()),
+            Err(_) => Owned(format!("\x1b[31m{}\x1b[0m", line))
+        }
+    }
+}
+
+impl Highlighter for RLHelper { 
+    fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
+        self.highlighter.highlight_hint(hint)
+    }
+    fn highlight<'l>(&self, line: &'l str, pos: usize) -> Cow<'l, str> {
+        self.highlighter.highlight(line, pos)
+    }
+}
+
+impl Completer for RLHelper {
+    type Candidate = Pair;
+    fn complete(
+        &self,
+        line: &str,
+        pos: usize,
+        ctx: &Context<'_>,
+        ) -> Result<(usize, Vec<Pair>), ReadlineError> {
+        self.completer.complete(line, pos, ctx)
+    }
+}
+ 
+impl Hinter for RLHelper {
+    fn hint(&self, line: &str, a: usize, b: &Context) -> Option<String> {
+        self.hinter.hint(line, a, b)
+    }
+}
+
+impl Helper for RLHelper {}
 
 struct Configuration {
     radian_mode: bool,
@@ -57,10 +124,16 @@ fn main() {
             .completion_type(CompletionType::Circular)
             .max_history_size(1000)
             .build();
-        let mut rl = Editor::<()>::with_config(config);
+        let mut rl = Editor::with_config(config);
+        let h = RLHelper {
+            completer: FilenameCompleter::new(),
+            highlighter: LineHighlighter {},
+            hinter: AnswerHinter {}
+        };
+        rl.set_helper(Some(h));
         if rl.load_history("history.txt").is_err() {
-            println!("No previous history.");
-        }
+            println!("No previous history.")
+        };
 
         loop {
             let readline = rl.readline("> ");
@@ -127,11 +200,11 @@ fn parse_arguments() -> Configuration {
             .unwrap_or("10")
             .parse()
             .unwrap(),
-        base: config.value_of("base")
-            .unwrap_or("10")
-            .parse()
-            .unwrap(),
-        input,
+            base: config.value_of("base")
+                .unwrap_or("10")
+                .parse()
+                .unwrap(),
+                input,
     }
 }
 
