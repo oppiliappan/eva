@@ -6,7 +6,8 @@
 
 // std
 use std::f64;
-use std::borrow::Cow::{self, Borrowed, Owned};
+use std::borrow::Cow::{self,Owned};
+use std::path::PathBuf;
 
 // modules
 mod lex;
@@ -24,11 +25,10 @@ use rustyline::{ Editor, Context, Helper };
 use rustyline::config::{ Builder, ColorMode, EditMode, CompletionType };
 use rustyline::hint::Hinter;
 use rustyline::completion::{ FilenameCompleter, Completer, Pair };
-use rustyline::highlight::{ Highlighter, MatchingBracketHighlighter };
+use rustyline::highlight::Highlighter;
 
 use clap::{Arg, App};
 use lazy_static::lazy_static;
-
 
 struct RLHelper {
     completer: FilenameCompleter,
@@ -131,7 +131,15 @@ fn main() {
             hinter: AnswerHinter {}
         };
         rl.set_helper(Some(h));
-        if rl.load_history("history.txt").is_err() {
+        let mut history_path = PathBuf::new();
+        match dirs::home_dir() {
+            Some(p) => {
+                history_path = p;
+                history_path.push("history.txt");
+            },
+            None => history_path.set_file_name("history.txt"),
+        };
+        if rl.load_history(history_path.as_path()).is_err() {
             println!("No previous history.")
         };
 
@@ -151,7 +159,6 @@ fn main() {
                     break
                 },
                 Err(ReadlineError::Eof) => {
-                    println!("CTRL-D");
                     break
                 },
                 Err(err) => {
@@ -160,7 +167,7 @@ fn main() {
                 }
             }
         }
-        rl.save_history("history.txt").unwrap();
+        rl.save_history(history_path.as_path()).unwrap();
     }
 }
 
