@@ -8,6 +8,7 @@
 use std::f64;
 use std::borrow::Cow::{self,Owned};
 use std::path::PathBuf;
+use std::fs::create_dir_all;
 
 // modules
 mod lex;
@@ -29,6 +30,8 @@ use rustyline::highlight::Highlighter;
 
 use clap::{Arg, App};
 use lazy_static::lazy_static;
+
+use directories::{ ProjectDirs, UserDirs };
 
 struct RLHelper {
     completer: FilenameCompleter,
@@ -131,14 +134,15 @@ fn main() {
             hinter: AnswerHinter {}
         };
         rl.set_helper(Some(h));
-        let mut history_path = PathBuf::new();
-        match dirs::home_dir() {
-            Some(p) => {
-                history_path = p;
-                history_path.push("history.txt");
-            },
-            None => history_path.set_file_name("history.txt"),
+
+        let eva_dirs = ProjectDirs::from("com", "NerdyPepper", "eva").unwrap();
+        let eva_data_dir = eva_dirs.data_dir();
+        let mut history_path = PathBuf::from(eva_data_dir);
+        match create_dir_all(eva_data_dir) {
+            Ok(_) => history_path.push("history.txt"),
+           Err(_) => history_path = PathBuf::from(UserDirs::new().unwrap().home_dir()),
         };
+
         if rl.load_history(history_path.as_path()).is_err() {
             println!("No previous history.")
         };
