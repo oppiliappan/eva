@@ -1,102 +1,33 @@
 /*
  *  eva - an easy to use calculator REPL similar to bc(1)
  *  Copyright (C) 2019  Akshay Oppiliappan <nerdypepper@tuta.io>
- *
  */
 
+/* imports */
 // std
 use std::f64;
-use std::borrow::Cow::{self,Owned};
 use std::path::PathBuf;
 use std::fs::create_dir_all;
 
 // modules
 mod lex;
-use crate::lex::*;
 mod parse;
-use crate::parse::*;
 mod error;
-use crate::error::{ CalcError, handler };
 mod format;
+mod readline;
+use crate::lex::*;
+use crate::parse::*;
+use crate::error::{ CalcError, handler };
 use crate::format::*;
+use crate::readline::*;
 
 // extern crates
 use rustyline::error::ReadlineError;
-use rustyline::{ Editor, Context, Helper };
-use rustyline::config::{ Builder, ColorMode, EditMode, CompletionType };
-use rustyline::hint::Hinter;
-use rustyline::completion::{ FilenameCompleter, Completer, Pair };
-use rustyline::highlight::Highlighter;
-
 use clap::{Arg, App};
 use lazy_static::lazy_static;
-
 use directories::{ ProjectDirs, UserDirs };
 
-struct RLHelper {
-    completer: FilenameCompleter,
-    highlighter: LineHighlighter,
-    hinter: AnswerHinter,
-}
-
-struct AnswerHinter { }
-impl Hinter for AnswerHinter {
-    fn hint(&self, line: &str, _: usize, _: &Context) -> Option<String> {
-        let input = line.trim();
-        let input = input.replace(" ", "");
-        if input.len() == 0 {
-            return Some("".into())
-        }
-        let dry_run = eval_math_expression(&input);
-        match dry_run {
-            Ok(ans) =>  return Some(format!(" = {}", ans)),
-            Err(_) => return Some(format!(""))
-        };
-    }
-}
-
-struct LineHighlighter { }
-impl Highlighter for LineHighlighter {
-    fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
-        Owned(format!("\x1b[90m{}\x1b[0m", hint))
-    }
-    fn highlight<'l>(&self, line: &'l str, _: usize) -> Cow<'l, str> {
-        let op = eval_math_expression(line);
-        match op {
-            Ok(_) => Owned(line.into()),
-            Err(_) => Owned(format!("\x1b[31m{}\x1b[0m", line))
-        }
-    }
-}
-
-impl Highlighter for RLHelper { 
-    fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
-        self.highlighter.highlight_hint(hint)
-    }
-    fn highlight<'l>(&self, line: &'l str, pos: usize) -> Cow<'l, str> {
-        self.highlighter.highlight(line, pos)
-    }
-}
-
-impl Completer for RLHelper {
-    type Candidate = Pair;
-    fn complete(
-        &self,
-        line: &str,
-        pos: usize,
-        ctx: &Context<'_>,
-        ) -> Result<(usize, Vec<Pair>), ReadlineError> {
-        self.completer.complete(line, pos, ctx)
-    }
-}
- 
-impl Hinter for RLHelper {
-    fn hint(&self, line: &str, a: usize, b: &Context) -> Option<String> {
-        self.hinter.hint(line, a, b)
-    }
-}
-
-impl Helper for RLHelper {}
+/* end of imports */
 
 struct Configuration {
     radian_mode: bool,
@@ -106,11 +37,12 @@ struct Configuration {
 }
 
 lazy_static! {
-    static ref CONFIGURATION: Configuration =  parse_arguments();
+    static ref CONFIGURATION: Configuration = parse_arguments();
 }
 
 fn main() {
     if CONFIGURATION.input.len() > 0 {
+        // command mode //
         let evaled = eval_math_expression(&CONFIGURATION.input[..]);
         match evaled {
             Ok(ans) => pprint(ans),
@@ -120,21 +52,11 @@ fn main() {
             },
         };
     } else {
-        let config_builder = Builder::new();
-        let config = config_builder.color_mode(ColorMode::Enabled)
-            .edit_mode(EditMode::Emacs)
-            .history_ignore_space(true)
-            .completion_type(CompletionType::Circular)
-            .max_history_size(1000)
-            .build();
-        let mut rl = Editor::with_config(config);
-        let h = RLHelper {
-            completer: FilenameCompleter::new(),
-            highlighter: LineHighlighter {},
-            hinter: AnswerHinter {}
-        };
-        rl.set_helper(Some(h));
+        // REPL mode //
+        // create fancy readline 
+        let mut rl = create_readline();
 
+        // handle history storage
         let eva_dirs = ProjectDirs::from("com", "NerdyPepper", "eva").unwrap();
         let eva_data_dir = eva_dirs.data_dir();
         let mut history_path = PathBuf::from(eva_data_dir);
@@ -147,6 +69,7 @@ fn main() {
             println!("No previous history.")
         };
 
+        // repl loop begins here
         loop {
             let readline = rl.readline("> ");
             match readline {
@@ -219,8 +142,7 @@ fn parse_arguments() -> Configuration {
     }
 }
 
-
-fn eval_math_expression(input: &str) -> Result<f64, CalcError> {
+pub fn eval_math_expression(input: &str) -> Result<f64, CalcError> {
     let input = input.trim();
     let input = input.replace(" ", "");
     if input.len() == 0 {
