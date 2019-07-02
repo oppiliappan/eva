@@ -1,8 +1,12 @@
+extern crate num;
+use num::{BigInt, FromPrimitive, ToPrimitive};
+
 use crate::CONFIGURATION;
 use crate::error::{
     CalcError,
     Math
 };
+
 
 pub fn autobalance_parens(input: &str) -> Result<String, CalcError> {
     let mut balanced = String::from(input);
@@ -35,13 +39,15 @@ fn radix_fmt(number: f64, obase: usize) -> Result<String, CalcError> {
     let table: Vec<char> = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().collect();
 
     // format integral part of float
-    let mut integral = number.abs().trunc() as i64;
+    let mut integral = BigInt::from_f64(number.abs().trunc()).unwrap();
     let mut obase_int = String::new();
-    while integral >= obase as i64 {
-        obase_int.push(table[(integral % obase as i64) as usize]);
-        integral /= obase as i64;
+    let obaseb = BigInt::from_usize(obase).unwrap();
+
+    while &integral >= &obaseb {
+        obase_int.push(table[(&integral % &obaseb).to_usize().unwrap()]);
+        integral /= &obaseb;
     }
-    obase_int.push(table[integral as usize]);
+    obase_int.push(table[integral.to_usize().unwrap()]);
     if number.is_sign_negative() {
         obase_int.push('-');
     }
