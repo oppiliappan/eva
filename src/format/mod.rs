@@ -36,12 +36,14 @@ fn radix_fmt(number: f64, obase: usize) -> Result<String, CalcError> {
         return Err(CalcError::Math(Math::UnknownBase));
     }
 
-    if number.is_infinite(){
-        return Ok("Inf".to_string());
+    match (number.is_infinite(), number.is_sign_positive()) {
+        (true, true) => return Ok("inf".to_string()),
+        (true, false) => return Ok("-inf".to_string()),
+        _ => ()
     }
 
     if number.is_nan(){
-        return Ok("Nan".to_string());
+        return Ok("nan".to_string());
     }
 
     let table: Vec<char> = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().collect();
