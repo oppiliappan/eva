@@ -36,6 +36,14 @@ fn radix_fmt(number: f64, obase: usize) -> Result<String, CalcError> {
         return Err(CalcError::Math(Math::UnknownBase));
     }
 
+    if number.is_infinite(){
+        return Ok("Inf".to_string());
+    }
+
+    if number.is_nan(){
+        return Ok("Nan".to_string());
+    }
+
     let table: Vec<char> = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().collect();
 
     // format integral part of float
