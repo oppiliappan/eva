@@ -3,9 +3,9 @@
 
 # eva
 
-simple calculator REPL, similar to `bc(1)`
+simple calculator REPL, similar to `bc(1)`, with syntax highlighting and persistent history
 
-![eva.png](https://files.nerdypepper.me/Kt.png)
+![eva.png](https://files.nerdypepper.me/kP.png)
 
 ### installation
 
@@ -55,6 +55,18 @@ type out an expression and hit enter, repeat.
 4.53553
 ```
 
+### updating
+
+ - crates.io
+ ```shell
+$ cargo install eva --force
+ ```
+
+ - manual
+```shell
+$ cargo install --force --path /path/to/eva
+```
+
 ### operators
 
  - binary operators: `+ - * / ^`
@@ -62,7 +74,7 @@ type out an expression and hit enter, repeat.
 
 ### functions
 
-All trignometric functions expect input in degrees.
+all trignometric functions expect input in degrees.
 
 ```
 sin    cos     tan    csc    sec    cot    sinh   cosh   tanh
@@ -101,9 +113,12 @@ log(100)      # yes
 Domain Error: Out of bounds!
 ```
 
+ - syntax highlighting
+
 ### todo
 
  - add support for variables (ans, pi, e)
+ - ~~syntax highlighting~~
  - multiple arg functions
  - ~~screenshots~~
  - ~~create logo~~
