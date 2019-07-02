@@ -7,6 +7,8 @@ use rustyline::hint::Hinter;
 use rustyline::completion::{ FilenameCompleter, Completer, Pair };
 use rustyline::highlight::Highlighter;
 
+use regex::Regex;
+
 use crate::eval_math_expression;
 
 pub struct RLHelper {
@@ -31,6 +33,7 @@ impl Hinter for AnswerHinter {
     }
 }
 
+
 struct LineHighlighter { }
 impl Highlighter for LineHighlighter {
     fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
@@ -39,7 +42,26 @@ impl Highlighter for LineHighlighter {
     fn highlight<'l>(&self, line: &'l str, _: usize) -> Cow<'l, str> {
         let op = eval_math_expression(line);
         match op {
-            Ok(_) => Owned(line.into()),
+            Ok(_) => {
+                let functions = [
+                    "sin"  , "cos"   , "tan"  ,
+                    "csc"  , "sec"   , "cot"  ,
+                    "sinh" , "cosh"  , "tanh" ,
+                    "ln"   , "log"   , "sqrt" ,
+                    "ceil" , "floor" , "rad"  ,
+                    "deg"  , "abs"   , "asin" ,
+                    "acos" , "atan"  , "acsc" ,
+                    "asec" , "acot"
+                ];
+                let ops = Regex::new(r"(?P<o>[\+-/\*%\^!])").unwrap();
+                let mut coloured: String = ops.replace_all(line, "\x1b[33m$o\x1b[0m").into();
+
+                for &f in functions.iter() {
+                    let hfn = format!("\x1b[34m{}\x1b[0m", f);
+                    coloured = coloured.replace(f, &hfn[..]);
+                }
+                Owned(coloured.into())
+            },
             Err(_) => Owned(format!("\x1b[31m{}\x1b[0m", line))
         }
     }
