@@ -122,7 +122,7 @@ fn factorial (n: f64) -> f64 {
         n.signum() * (1.. n.abs() as u64 +1).fold(1, |p, n| p*n) as f64
 }
 
-pub fn lexer(input: &str) -> Result<Vec<Token>, CalcError> {
+pub fn lexer(input: &str, prev_ans: &mut f64) -> Result<Vec<Token>, CalcError> {
     let functions: HashMap<&str, Token> = get_functions();
     let operators: HashMap<char, Token> = get_operators();
 
@@ -144,6 +144,23 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, CalcError> {
                 num_vec.push(letter);
                 last_char_is_op = false; 
             },
+            '_' => {
+                if char_vec.len() > 0 {
+                    if let Some(_) = functions.get(&char_vec[..]) {
+                        return Err(CalcError::Syntax(format!("Function '{}' expected parentheses", char_vec)))
+                    } else {
+                        return Err(CalcError::Syntax(format!("Unexpected character '{}'", char_vec)))
+                    }
+                }
+                let parse_num = num_vec.parse::<f64>().ok();
+                if let Some(x) = parse_num {
+                    result.push(Token::Num(x));
+                    result.push(operators.get(&'*').unwrap().clone());
+                    num_vec.clear();
+                }
+                last_char_is_op = false; 
+                result.push(Token::Num(*prev_ans));
+            }
             'a'...'z' | 'A'...'Z' => {
                 let parse_num = num_vec.parse::<f64>().ok();
                 if let Some(x) = parse_num {
@@ -216,10 +233,11 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, CalcError> {
             },
             ' ' => {},
             _ => {
-                return Err(CalcError::Syntax(format!("Unexpected character: '{}'", letter)))
+                return Err(CalcError::Syntax(format!("Unexpected token: '{}'", letter)))
             }
         }
     }
+    // println!("{:?}", result);
     drain_num_stack(&mut num_vec, &mut result);
     Ok(result)
 }

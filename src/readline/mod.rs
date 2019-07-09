@@ -3,7 +3,7 @@ use std::borrow::Cow::{self,Owned};
 use rustyline::error::ReadlineError;
 use rustyline::{ Editor, Context, Helper };
 use rustyline::config::{ Builder, ColorMode, EditMode, CompletionType };
-use rustyline::hint::Hinter;
+use rustyline::hint::{ Hinter, HistoryHinter };
 use rustyline::completion::{ FilenameCompleter, Completer, Pair };
 use rustyline::highlight::Highlighter;
 
@@ -14,25 +14,8 @@ use crate::eval_math_expression;
 pub struct RLHelper {
     completer: FilenameCompleter,
     highlighter: LineHighlighter,
-    hinter: AnswerHinter,
+    hinter: HistoryHinter,
 }
-
-struct AnswerHinter { }
-impl Hinter for AnswerHinter {
-    fn hint(&self, line: &str, _: usize, _: &Context) -> Option<String> {
-        let input = line.trim();
-        let input = input.replace(" ", "");
-        if input.len() == 0 {
-            return Some("".into())
-        }
-        let dry_run = eval_math_expression(&input);
-        match dry_run {
-            Ok(ans) =>  return Some(format!(" = {}", ans)),
-            Err(_) => return Some(format!(""))
-        };
-    }
-}
-
 
 struct LineHighlighter { }
 impl Highlighter for LineHighlighter {
@@ -40,7 +23,7 @@ impl Highlighter for LineHighlighter {
         Owned(format!("\x1b[90m{}\x1b[0m", hint))
     }
     fn highlight<'l>(&self, line: &'l str, _: usize) -> Cow<'l, str> {
-        let op = eval_math_expression(line);
+        let op = eval_math_expression(line, &mut 0f64);
         match op {
             Ok(_) => {
                 let functions = [
@@ -108,7 +91,7 @@ pub fn create_readline() -> Editor<RLHelper> {
         let h = RLHelper {
             completer: FilenameCompleter::new(),
             highlighter: LineHighlighter {},
-            hinter: AnswerHinter {}
+            hinter: HistoryHinter {}
         };
         rl.set_helper(Some(h));
         return rl;

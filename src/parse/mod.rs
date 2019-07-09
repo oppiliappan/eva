@@ -95,7 +95,7 @@ pub fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, CalcError> {
                 }
             }
             _ => {
-                unreachable!("nah nigga")
+                unreachable!("wut")
             }
         }
     }
