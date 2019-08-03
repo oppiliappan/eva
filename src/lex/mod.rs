@@ -122,7 +122,7 @@ fn factorial (n: f64) -> f64 {
         n.signum() * (1.. n.abs() as u64 +1).fold(1, |p, n| p*n) as f64
 }
 
-pub fn lexer(input: &str, prev_ans: &mut f64) -> Result<Vec<Token>, CalcError> {
+pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
     let functions: HashMap<&str, Token> = get_functions();
     let operators: HashMap<char, Token> = get_operators();
 
@@ -159,7 +159,7 @@ pub fn lexer(input: &str, prev_ans: &mut f64) -> Result<Vec<Token>, CalcError> {
                     num_vec.clear();
                 }
                 last_char_is_op = false; 
-                result.push(Token::Num(*prev_ans));
+                result.push(Token::Num(prev_ans));
             }
             'a'...'z' | 'A'...'Z' => {
                 let parse_num = num_vec.parse::<f64>().ok();

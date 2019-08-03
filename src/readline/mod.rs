@@ -23,7 +23,7 @@ impl Highlighter for LineHighlighter {
         Owned(format!("\x1b[90m{}\x1b[0m", hint))
     }
     fn highlight<'l>(&self, line: &'l str, _: usize) -> Cow<'l, str> {
-        let op = eval_math_expression(line, &mut 0f64);
+        let op = eval_math_expression(line, 0f64);
         match op {
             Ok(_) => {
                 let functions = [

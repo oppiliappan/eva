@@ -43,7 +43,7 @@ lazy_static! {
 fn main() {
     if CONFIGURATION.input.len() > 0 {
         // command mode //
-        let evaled = eval_math_expression(&CONFIGURATION.input[..], &mut 0f64);
+        let evaled = eval_math_expression(&CONFIGURATION.input[..], 0f64);
         match evaled {
             Ok(ans) => pprint(ans),
             Err(e) => {
@@ -78,9 +78,12 @@ fn main() {
             match readline {
                 Ok(line) => {
                     rl.add_history_entry(line.as_str());
-                    let evaled = eval_math_expression(&line[..], &mut prev_ans);
+                    let evaled = eval_math_expression(&line[..], prev_ans);
                     match evaled {
-                        Ok(ans) => pprint(ans),
+                        Ok(ans) => {
+                            prev_ans = ans;
+                            pprint(ans);
+                        }
                         Err(e) => println!("{}", handler(e)),
                     };
                 },
@@ -145,7 +148,7 @@ fn parse_arguments() -> Configuration {
     }
 }
 
-pub fn eval_math_expression(input: &str, prev_ans: &mut f64) -> Result<f64, CalcError> {
+pub fn eval_math_expression(input: &str, prev_ans: f64) -> Result<f64, CalcError> {
     let input = input.trim();
     let input = input.replace(" ", "");
     if input.len() == 0 {
@@ -155,7 +158,6 @@ pub fn eval_math_expression(input: &str, prev_ans: &mut f64) -> Result<f64, Calc
     let lexed        = lexer(&input[..], prev_ans)?;
     let postfixed    = to_postfix(lexed)?;
     let evaled       = eval_postfix(postfixed)?;
-    *prev_ans         = evaled;
     let evaled_fixed = format!("{:.*}", CONFIGURATION.fix, evaled).parse::<f64>().unwrap();
     Ok(evaled_fixed)
 }
@@ -166,32 +168,32 @@ mod tests {
 
     #[test]
     fn basic_ops() {
-        let evaled = eval_math_expression("6*2 + 3 + 12 -3", &0f64).unwrap();
+        let evaled = eval_math_expression("6*2 + 3 + 12 -3", 0f64).unwrap();
         assert_eq!(24., evaled);
     }
     #[test]
     fn trignometric_fns() {
-        let evaled = eval_math_expression("sin(30) + tan(45", &0f64).unwrap();
+        let evaled = eval_math_expression("sin(30) + tan(45", 0f64).unwrap();
         assert_eq!(1.5, evaled);
     }
     #[test]
     fn brackets() {
-        let evaled = eval_math_expression("(((1 + 2 + 3) ^ 2 ) - 4)", &0f64).unwrap();
+        let evaled = eval_math_expression("(((1 + 2 + 3) ^ 2 ) - 4)", 0f64).unwrap();
         assert_eq!(32., evaled);
     }
     #[test]
     fn floating_ops() {
-        let evaled = eval_math_expression("1.2816 + 1 + 1.2816/1.2", &0f64).unwrap();
+        let evaled = eval_math_expression("1.2816 + 1 + 1.2816/1.2", 0f64).unwrap();
         assert_eq!(3.3496, evaled);
     }
     #[test]
     fn inverse_trignometric_fns() {
-        let evaled = eval_math_expression("deg(asin(1) + acos(1))", &0f64).unwrap();
+        let evaled = eval_math_expression("deg(asin(1) + acos(1))", 0f64).unwrap();
         assert_eq!(90., evaled);
     }
     #[test]
     fn prev_ans() {
-        let evaled = eval_math_expression("_ + 9", &9f64).unwrap();
+        let evaled = eval_math_expression("_ + 9", 9f64).unwrap();
         assert_eq!(18.0, evaled);
     }
 }
