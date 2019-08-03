@@ -2,6 +2,7 @@
  * Refer to LICENCE for more information.
  * */
 
+use lazy_static::lazy_static;
 use std::collections::HashMap;
 
 use crate::CONFIGURATION;
@@ -77,52 +78,54 @@ pub enum Token {
     RParen
 }
 
-fn get_constants() -> HashMap<&'static str, Token> {
-    return [
-        ("e",  Token::Num(std::f64::consts::E)),
-        ("pi", Token::Num(std::f64::consts::PI)),
-    ].iter().cloned().collect();
-}
+lazy_static! {
+    static ref CONSTANTS: HashMap<&'static str, Token> = {
+        let mut m = HashMap::new();
+        m.insert("e",  Token::Num(std::f64::consts::E));
+        m.insert("pi", Token::Num(std::f64::consts::PI));
+        m
+    };
 
-fn get_functions() -> HashMap<&'static str, Token> {
-    return [
-        ("sin",   Function::token_from_fn("sin".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin())),
-        ("cos",   Function::token_from_fn("cos".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos())),
-        ("tan",   Function::token_from_fn("tan".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).tan())),
-        ("csc",   Function::token_from_fn("csc".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin().recip())),
-        ("sec",   Function::token_from_fn("sec".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos().recip())),
-        ("cot",   Function::token_from_fn("cot".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).tan().recip())),
-        ("sinh",  Function::token_from_fn("sinh".into(),  |x| x.sinh())),
-        ("cosh",  Function::token_from_fn("cosh".into(),  |x| x.cosh())),
-        ("tanh",  Function::token_from_fn("tanh".into(),  |x| x.tanh())),
-        ("ln",    Function::token_from_fn("ln".into(),    |x| x.ln())),
-        ("log",   Function::token_from_fn("log".into(),   |x| x.log10())),
-        ("sqrt",  Function::token_from_fn("sqrt".into(),  |x| x.sqrt())),
-        ("ceil",  Function::token_from_fn("ceil".into(),  |x| x.ceil())),
-        ("floor", Function::token_from_fn("floor".into(), |x| x.floor())),
-        ("rad",   Function::token_from_fn("rad".into(),   |x| x.to_radians())),
-        ("deg",   Function::token_from_fn("deg".into(),   |x| x.to_degrees())),
-        ("abs",   Function::token_from_fn("abs".into(),   |x| x.abs())),
-        ("asin",  Function::token_from_fn("asin".into(),  |x| x.asin())),
-        ("acos",  Function::token_from_fn("acos".into(),  |x| x.acos())),
-        ("atan",  Function::token_from_fn("atan".into(),  |x| x.atan())),
-        ("acsc",  Function::token_from_fn("acsc".into(),  |x| (1./x).asin())),
-        ("asec",  Function::token_from_fn("asec".into(),  |x| (1./x).acos())),
-        ("acot",  Function::token_from_fn("acot".into(),  |x| (1./x).atan())),
+    static ref FUNCTIONS: HashMap<&'static str, Token> = {
+        let mut m = HashMap::new();
+        m.insert("sin",   Function::token_from_fn("sin".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin()));
+        m.insert("cos",   Function::token_from_fn("cos".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos()));
+        m.insert("tan",   Function::token_from_fn("tan".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).tan()));
+        m.insert("csc",   Function::token_from_fn("csc".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin().recip()));
+        m.insert("sec",   Function::token_from_fn("sec".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos().recip()));
+        m.insert("cot",   Function::token_from_fn("cot".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).tan().recip()));
+        m.insert("sinh",  Function::token_from_fn("sinh".into(),  |x| x.sinh()));
+        m.insert("cosh",  Function::token_from_fn("cosh".into(),  |x| x.cosh()));
+        m.insert("tanh",  Function::token_from_fn("tanh".into(),  |x| x.tanh()));
+        m.insert("ln",    Function::token_from_fn("ln".into(),    |x| x.ln()));
+        m.insert("log",   Function::token_from_fn("log".into(),   |x| x.log10()));
+        m.insert("sqrt",  Function::token_from_fn("sqrt".into(),  |x| x.sqrt()));
+        m.insert("ceil",  Function::token_from_fn("ceil".into(),  |x| x.ceil()));
+        m.insert("floor", Function::token_from_fn("floor".into(), |x| x.floor()));
+        m.insert("rad",   Function::token_from_fn("rad".into(),   |x| x.to_radians()));
+        m.insert("deg",   Function::token_from_fn("deg".into(),   |x| x.to_degrees()));
+        m.insert("abs",   Function::token_from_fn("abs".into(),   |x| x.abs()));
+        m.insert("asin",  Function::token_from_fn("asin".into(),  |x| x.asin()));
+        m.insert("acos",  Function::token_from_fn("acos".into(),  |x| x.acos()));
+        m.insert("atan",  Function::token_from_fn("atan".into(),  |x| x.atan()));
+        m.insert("acsc",  Function::token_from_fn("acsc".into(),  |x| (1./x).asin()));
+        m.insert("asec",  Function::token_from_fn("asec".into(),  |x| (1./x).acos()));
+        m.insert("acot",  Function::token_from_fn("acot".into(),  |x| (1./x).atan()));
         // single arg function s can be added here
-    ].iter().cloned().collect();
-}
+        m
+    };
 
-pub fn get_operators() -> HashMap<char, Token> {
-    return [
-        ('+', Operator::token_from_op('+', |x, y| x + y, 2, true)),
-        ('-', Operator::token_from_op('-', |x, y| x - y, 2, true)),
-        ('*', Operator::token_from_op('*', |x, y| x * y, 3, true)),
-        ('/', Operator::token_from_op('/', |x, y| x / y, 3, true)),
-        ('%', Operator::token_from_op('%', |x, y| x % y, 3, true)),
-        ('^', Operator::token_from_op('^', |x, y| x.powf(y) , 4, false)),
-        ('!', Operator::token_from_op('!', |x, _| factorial(x) , 4, true)),
-    ].iter().cloned().collect();
+    static ref OPERATORS: HashMap<char, Token> = {
+        let mut m = HashMap::new();
+        m.insert('+', Operator::token_from_op('+', |x, y| x + y, 2, true));
+        m.insert('-', Operator::token_from_op('-', |x, y| x - y, 2, true));
+        m.insert('*', Operator::token_from_op('*', |x, y| x * y, 3, true));
+        m.insert('/', Operator::token_from_op('/', |x, y| x / y, 3, true));
+        m.insert('%', Operator::token_from_op('%', |x, y| x % y, 3, true));
+        m.insert('^', Operator::token_from_op('^', |x, y| x.powf(y) , 4, false));
+        m.insert('!', Operator::token_from_op('!', |x, _| factorial(x) , 4, true));
+        m
+    };
 }
 
 fn factorial (n: f64) -> f64 {
@@ -130,10 +133,6 @@ fn factorial (n: f64) -> f64 {
 }
 
 pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
-    let constants: HashMap<&str, Token> = get_constants();
-    let functions: HashMap<&str, Token> = get_functions();
-    let operators: HashMap<char, Token> = get_operators();
-
     let mut num_vec: String = String::new();
     let mut char_vec: String = String::new();
     let mut result: Vec<Token> = vec![];
@@ -143,7 +142,7 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
         match letter {
             '0'...'9' | '.' => {
                 if char_vec.len() > 0 {
-                    if let Some(_) = functions.get(&char_vec[..]) {
+                    if let Some(_) = FUNCTIONS.get(&char_vec[..]) {
                         return Err(CalcError::Syntax(format!("Function '{}' expected parentheses", char_vec)))
                     } else {
                         return Err(CalcError::Syntax(format!("Unexpected character '{}'", char_vec)))
@@ -154,7 +153,7 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
             },
             '_' => {
                 if char_vec.len() > 0 {
-                    if let Some(_) = functions.get(&char_vec[..]) {
+                    if let Some(_) = FUNCTIONS.get(&char_vec[..]) {
                         return Err(CalcError::Syntax(format!("Function '{}' expected parentheses", char_vec)))
                     } else {
                         return Err(CalcError::Syntax(format!("Unexpected character '{}'", char_vec)))
@@ -163,7 +162,7 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
                 let parse_num = num_vec.parse::<f64>().ok();
                 if let Some(x) = parse_num {
                     result.push(Token::Num(x));
-                    result.push(operators.get(&'*').unwrap().clone());
+                    result.push(OPERATORS.get(&'*').unwrap().clone());
                     num_vec.clear();
                 }
                 last_char_is_op = false; 
@@ -173,21 +172,21 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
                 let parse_num = num_vec.parse::<f64>().ok();
                 if let Some(x) = parse_num {
                     result.push(Token::Num(x));
-                    result.push(operators.get(&'*').unwrap().clone());
+                    result.push(OPERATORS.get(&'*').unwrap().clone());
                     num_vec.clear();
                 }
                 char_vec.push(letter);
                 last_char_is_op = false;
             },
             '+' | '-' => {
-                let op_token = operators.get(&letter).unwrap().clone();
+                let op_token = OPERATORS.get(&letter).unwrap().clone();
                 let parse_num = num_vec.parse::<f64>().ok();
                 if !last_char_is_op {
                     if let Some(x) = parse_num {
                         result.push(Token::Num(x));
                         num_vec.clear();
                         last_char_is_op = true;
-                    } else if let Some(token) = constants.get(&char_vec[..]) {
+                    } else if let Some(token) = CONSTANTS.get(&char_vec[..]) {
                         result.push(token.clone());
                         char_vec.clear();
                         last_char_is_op = true;
@@ -202,7 +201,7 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
             },
             '/' | '*' | '%' | '^' | '!' => {
                 drain_stack(&mut num_vec, &mut char_vec, &mut result);
-                let operator_token: Token = operators.get(&letter).unwrap().clone();
+                let operator_token: Token = OPERATORS.get(&letter).unwrap().clone();
                 result.push(operator_token);
                 last_char_is_op = true; 
                 if letter == '!' {
@@ -212,7 +211,7 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
             },
             '('  => {
                 if char_vec.len() > 0 {
-                    if let Some(res) = functions.get(&char_vec[..]) {
+                    if let Some(res) = FUNCTIONS.get(&char_vec[..]) {
                         result.push(res.clone());
                     } else {
                         return Err(CalcError::Syntax(format!("Unknown function '{}'", char_vec)))
@@ -222,7 +221,7 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
                     let parse_num = num_vec.parse::<f64>().ok();
                     if let Some(x) = parse_num {
                         result.push(Token::Num(x));
-                        result.push(operators.get(&'*').unwrap().clone());
+                        result.push(OPERATORS.get(&'*').unwrap().clone());
                         num_vec.clear();
                     }
                 }
@@ -230,7 +229,7 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
                 if let Some(x) = result.last() {
                     match x {
                         Token::RParen => {
-                            result.push(operators.get(&'*').unwrap().clone());
+                            result.push(OPERATORS.get(&'*').unwrap().clone());
                         },
                         _ => {}
                     };
@@ -259,7 +258,7 @@ fn drain_stack(num_vec: &mut String, char_vec: &mut String, result: &mut Vec<Tok
     if let Some(x) = parse_num {
         result.push(Token::Num(x));
         num_vec.clear();
-    } else if let Some(token) = get_constants().get(&char_vec[..]) {
+    } else if let Some(token) = CONSTANTS.get(&char_vec[..]) {
         result.push(token.clone());
         char_vec.clear();
     }
