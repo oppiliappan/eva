@@ -7,10 +7,7 @@ use std::collections::HashMap;
 
 use crate::CONFIGURATION;
 
-use crate::error::{
-    CalcError,
-    Math
-};
+use crate::error::{CalcError, Math};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Operator {
@@ -21,22 +18,22 @@ pub struct Operator {
 }
 
 impl Operator {
-    fn token_from_op(token: char,
-                     operation: fn(f64, f64) -> f64,
-                     precedence: u8,
-                     is_left_associative: bool) -> Token {
-        Token::Operator(
-            Operator {
-                token,
-                operation,
-                precedence,
-                is_left_associative
-            }
-        )
+    fn token_from_op(
+        token: char,
+        operation: fn(f64, f64) -> f64,
+        precedence: u8,
+        is_left_associative: bool,
+    ) -> Token {
+        Token::Operator(Operator {
+            token,
+            operation,
+            precedence,
+            is_left_associative,
+        })
     }
     pub fn operate(self, x: f64, y: f64) -> Result<f64, CalcError> {
         if self.token == '/' && y == 0. {
-            return Err(CalcError::Math(Math::DivideByZero))
+            Err(CalcError::Math(Math::DivideByZero))
         } else {
             Ok((self.operation)(x, y))
         }
@@ -51,23 +48,17 @@ pub struct Function {
 
 impl Function {
     fn token_from_fn(token: String, relation: fn(f64) -> f64) -> Token {
-        Token::Function(
-            Function {
-                token,
-                relation
-            }
-        )
+        Token::Function(Function { token, relation })
     }
     pub fn apply(self, arg: f64) -> Result<f64, CalcError> {
         let result = (self.relation)(arg);
         if !result.is_finite() {
-            return Err(CalcError::Math(Math::OutOfBounds));
+            Err(CalcError::Math(Math::OutOfBounds))
         } else {
             Ok(result)
         }
     }
 }
-
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
@@ -75,7 +66,7 @@ pub enum Token {
     Num(f64),
     Function(Function),
     LParen,
-    RParen
+    RParen,
 }
 
 lazy_static! {
@@ -128,8 +119,8 @@ lazy_static! {
     };
 }
 
-fn factorial (n: f64) -> f64 {
-        n.signum() * (1.. n.abs() as u64 +1).fold(1, |p, n| p*n) as f64
+fn factorial(n: f64) -> f64 {
+    n.signum() * (1..=n.abs() as u64).fold(1, |p, n| p * n) as f64
 }
 
 pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
@@ -141,22 +132,34 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
     for letter in input.chars() {
         match letter {
             '0'...'9' | '.' => {
-                if char_vec.len() > 0 {
-                    if let Some(_) = FUNCTIONS.get(&char_vec[..]) {
-                        return Err(CalcError::Syntax(format!("Function '{}' expected parentheses", char_vec)))
+                if !char_vec.is_empty() {
+                    if FUNCTIONS.get(&char_vec[..]).is_some() {
+                        return Err(CalcError::Syntax(format!(
+                            "Function '{}' expected parentheses",
+                            char_vec
+                        )));
                     } else {
-                        return Err(CalcError::Syntax(format!("Unexpected character '{}'", char_vec)))
+                        return Err(CalcError::Syntax(format!(
+                            "Unexpected character '{}'",
+                            char_vec
+                        )));
                     }
                 }
                 num_vec.push(letter);
-                last_char_is_op = false; 
-            },
+                last_char_is_op = false;
+            }
             '_' => {
-                if char_vec.len() > 0 {
-                    if let Some(_) = FUNCTIONS.get(&char_vec[..]) {
-                        return Err(CalcError::Syntax(format!("Function '{}' expected parentheses", char_vec)))
+                if !char_vec.is_empty() {
+                    if FUNCTIONS.get(&char_vec[..]).is_some() {
+                        return Err(CalcError::Syntax(format!(
+                            "Function '{}' expected parentheses",
+                            char_vec
+                        )));
                     } else {
-                        return Err(CalcError::Syntax(format!("Unexpected character '{}'", char_vec)))
+                        return Err(CalcError::Syntax(format!(
+                            "Unexpected character '{}'",
+                            char_vec
+                        )));
                     }
                 }
                 let parse_num = num_vec.parse::<f64>().ok();
@@ -165,7 +168,7 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
                     result.push(OPERATORS.get(&'*').unwrap().clone());
                     num_vec.clear();
                 }
-                last_char_is_op = false; 
+                last_char_is_op = false;
                 result.push(Token::Num(prev_ans));
             }
             'a'...'z' | 'A'...'Z' => {
@@ -177,7 +180,7 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
                 }
                 char_vec.push(letter);
                 last_char_is_op = false;
-            },
+            }
             '+' | '-' => {
                 let op_token = OPERATORS.get(&letter).unwrap().clone();
                 let parse_num = num_vec.parse::<f64>().ok();
@@ -194,27 +197,32 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
                     result.push(op_token);
                 } else if last_char_is_op {
                     result.push(Token::LParen);
-                    result.push(Token::Num((letter.to_string() + "1").parse::<f64>().unwrap()));
+                    result.push(Token::Num(
+                        (letter.to_string() + "1").parse::<f64>().unwrap(),
+                    ));
                     result.push(Token::RParen);
                     result.push(Operator::token_from_op('*', |x, y| x * y, 10, true));
                 }
-            },
+            }
             '/' | '*' | '%' | '^' | '!' => {
                 drain_stack(&mut num_vec, &mut char_vec, &mut result);
                 let operator_token: Token = OPERATORS.get(&letter).unwrap().clone();
                 result.push(operator_token);
-                last_char_is_op = true; 
+                last_char_is_op = true;
                 if letter == '!' {
                     result.push(Token::Num(1.));
-                    last_char_is_op = false; 
+                    last_char_is_op = false;
                 }
-            },
-            '('  => {
-                if char_vec.len() > 0 {
+            }
+            '(' => {
+                if !char_vec.is_empty() {
                     if let Some(res) = FUNCTIONS.get(&char_vec[..]) {
                         result.push(res.clone());
                     } else {
-                        return Err(CalcError::Syntax(format!("Unknown function '{}'", char_vec)))
+                        return Err(CalcError::Syntax(format!(
+                            "Unknown function '{}'",
+                            char_vec
+                        )));
                     }
                     char_vec.clear();
                 } else {
@@ -226,26 +234,19 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
                     }
                 }
 
-                if let Some(x) = result.last() {
-                    match x {
-                        Token::RParen => {
-                            result.push(OPERATORS.get(&'*').unwrap().clone());
-                        },
-                        _ => {}
-                    };
+                if let Some(Token::RParen) = result.last() {
+                    result.push(OPERATORS.get(&'*').unwrap().clone());
                 }
                 result.push(Token::LParen);
-                last_char_is_op = true; 
-            },
+                last_char_is_op = true;
+            }
             ')' => {
                 drain_stack(&mut num_vec, &mut char_vec, &mut result);
                 result.push(Token::RParen);
-                last_char_is_op = false;  
-            },
-            ' ' => {},
-            _ => {
-                return Err(CalcError::Syntax(format!("Unexpected token: '{}'", letter)))
+                last_char_is_op = false;
             }
+            ' ' => {}
+            _ => return Err(CalcError::Syntax(format!("Unexpected token: '{}'", letter))),
         }
     }
     // println!("{:?}", result);
@@ -266,7 +267,7 @@ fn drain_stack(num_vec: &mut String, char_vec: &mut String, result: &mut Vec<Tok
 
 fn is_radian_mode(x: f64, is_radian: bool) -> f64 {
     if is_radian {
-        return x
+        x
     } else {
         x.to_radians()
     }

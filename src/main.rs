@@ -6,26 +6,26 @@
 /* imports */
 // std
 use std::f64;
-use std::path::PathBuf;
 use std::fs::create_dir_all;
+use std::path::PathBuf;
 
 // modules
-mod lex;
-mod parse;
 mod error;
 mod format;
+mod lex;
+mod parse;
 mod readline;
+use crate::error::{handler, CalcError};
+use crate::format::*;
 use crate::lex::*;
 use crate::parse::*;
-use crate::error::{ CalcError, handler };
-use crate::format::*;
 use crate::readline::*;
 
 // extern crates
-use rustyline::error::ReadlineError;
-use clap::{Arg, App};
+use clap::{App, Arg};
+use directories::{ProjectDirs, UserDirs};
 use lazy_static::lazy_static;
-use directories::{ ProjectDirs, UserDirs };
+use rustyline::error::ReadlineError;
 
 /* end of imports */
 
@@ -33,7 +33,7 @@ struct Configuration {
     radian_mode: bool,
     fix: usize,
     base: usize,
-    input: String
+    input: String,
 }
 
 lazy_static! {
@@ -41,7 +41,7 @@ lazy_static! {
 }
 
 fn main() {
-    if CONFIGURATION.input.len() > 0 {
+    if !CONFIGURATION.input.is_empty() {
         // command mode //
         let evaled = eval_math_expression(&CONFIGURATION.input[..], 0f64);
         match evaled {
@@ -49,11 +49,11 @@ fn main() {
             Err(e) => {
                 eprintln!("{}", handler(e));
                 std::process::exit(1);
-            },
+            }
         };
     } else {
         // REPL mode //
-        // create fancy readline 
+        // create fancy readline
         let mut rl = create_readline();
 
         // previous answer
@@ -65,7 +65,7 @@ fn main() {
         let mut history_path = PathBuf::from(eva_data_dir);
         match create_dir_all(eva_data_dir) {
             Ok(_) => history_path.push("history.txt"),
-           Err(_) => history_path = PathBuf::from(UserDirs::new().unwrap().home_dir()),
+            Err(_) => history_path = PathBuf::from(UserDirs::new().unwrap().home_dir()),
         };
 
         if rl.load_history(history_path.as_path()).is_err() {
@@ -86,17 +86,15 @@ fn main() {
                         }
                         Err(e) => println!("{}", handler(e)),
                     };
-                },
+                }
                 Err(ReadlineError::Interrupted) => {
                     println!("CTRL-C");
-                    break
-                },
-                Err(ReadlineError::Eof) => {
-                    break
-                },
+                    break;
+                }
+                Err(ReadlineError::Eof) => break,
                 Err(err) => {
                     println!("Error: {:?}", err);
-                    break
+                    break;
                 }
             }
         }
@@ -109,25 +107,33 @@ fn parse_arguments() -> Configuration {
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
-        .arg(Arg::with_name("fix")
-             .short("f")
-             .long("fix")
-             .takes_value(true)
-             .value_name("FIX")
-             .help("set number of decimal places in the output"))
-        .arg(Arg::with_name("base")
-             .short("b")
-             .long("base")
-             .takes_value(true)
-             .value_name("RADIX")
-             .help("set the radix of calculation output (1 - 36)"))
-        .arg(Arg::with_name("INPUT")
-             .help("optional expression string to run eva in command mode")
-             .index(1))
-        .arg(Arg::with_name("radian")
-             .short("r")
-             .long("radian")
-             .help("set eva to radian mode"))
+        .arg(
+            Arg::with_name("fix")
+                .short("f")
+                .long("fix")
+                .takes_value(true)
+                .value_name("FIX")
+                .help("set number of decimal places in the output"),
+        )
+        .arg(
+            Arg::with_name("base")
+                .short("b")
+                .long("base")
+                .takes_value(true)
+                .value_name("RADIX")
+                .help("set the radix of calculation output (1 - 36)"),
+        )
+        .arg(
+            Arg::with_name("INPUT")
+                .help("optional expression string to run eva in command mode")
+                .index(1),
+        )
+        .arg(
+            Arg::with_name("radian")
+                .short("r")
+                .long("radian")
+                .help("set eva to radian mode"),
+        )
         .get_matches();
 
     let mut input = String::new();
@@ -136,29 +142,25 @@ fn parse_arguments() -> Configuration {
     };
     Configuration {
         radian_mode: config.is_present("radian"),
-        fix: config.value_of("fix")
-            .unwrap_or("10")
-            .parse()
-            .unwrap(),
-            base: config.value_of("base")
-                .unwrap_or("10")
-                .parse()
-                .unwrap(),
-                input,
+        fix: config.value_of("fix").unwrap_or("10").parse().unwrap(),
+        base: config.value_of("base").unwrap_or("10").parse().unwrap(),
+        input,
     }
 }
 
 pub fn eval_math_expression(input: &str, prev_ans: f64) -> Result<f64, CalcError> {
     let input = input.trim();
     let input = input.replace(" ", "");
-    if input.len() == 0 {
-        return Ok(0.)
+    if input.is_empty() {
+        return Ok(0.);
     }
-    let input        = format::autobalance_parens(&input[..])?;
-    let lexed        = lexer(&input[..], prev_ans)?;
-    let postfixed    = to_postfix(lexed)?;
-    let evaled       = eval_postfix(postfixed)?;
-    let evaled_fixed = format!("{:.*}", CONFIGURATION.fix, evaled).parse::<f64>().unwrap();
+    let input = format::autobalance_parens(&input[..])?;
+    let lexed = lexer(&input[..], prev_ans)?;
+    let postfixed = to_postfix(lexed)?;
+    let evaled = eval_postfix(postfixed)?;
+    let evaled_fixed = format!("{:.*}", CONFIGURATION.fix, evaled)
+        .parse::<f64>()
+        .unwrap();
     Ok(evaled_fixed)
 }
 

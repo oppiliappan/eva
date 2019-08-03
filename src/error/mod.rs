@@ -13,23 +13,17 @@ pub enum CalcError {
 pub enum Math {
     DivideByZero,
     OutOfBounds,
-    UnknownBase
+    UnknownBase,
 }
 
 pub fn handler(e: CalcError) -> String {
     match e {
-        CalcError::Math(math_err) => {
-            match math_err {
-                Math::DivideByZero => format!("Math Error: Divide by zero error!"),
-                Math::OutOfBounds => format!("Domain Error: Out of bounds!"),
-                Math::UnknownBase => format!("Base too large! Accepted ranges: 0 - 36")
-            }
+        CalcError::Math(math_err) => match math_err {
+            Math::DivideByZero => "Math Error: Divide by zero error!".to_string(),
+            Math::OutOfBounds => "Domain Error: Out of bounds!".to_string(),
+            Math::UnknownBase => "Base too large! Accepted ranges: 0 - 36".to_string(),
         },
-        CalcError::Syntax(details) => {
-            format!("Syntax Error: {}", details)
-        },
-        CalcError::Parser(details) => {
-            format!("Parser Error: {}", details)
-        }
+        CalcError::Syntax(details) => format!("Syntax Error: {}", details),
+        CalcError::Parser(details) => format!("Parser Error: {}", details),
     }
 }

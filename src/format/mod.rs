@@ -1,12 +1,8 @@
 extern crate num;
 use num::{BigInt, FromPrimitive, ToPrimitive};
 
+use crate::error::{CalcError, Math};
 use crate::CONFIGURATION;
-use crate::error::{
-    CalcError,
-    Math
-};
-
 
 pub fn autobalance_parens(input: &str) -> Result<String, CalcError> {
     let mut balanced = String::from(input);
@@ -25,7 +21,7 @@ pub fn autobalance_parens(input: &str) -> Result<String, CalcError> {
         balanced.push_str(&extras[..]);
         Ok(balanced)
     } else if left_parens < right_parens {
-        return Err(CalcError::Syntax("Mismatched parentheses!".into()))
+        Err(CalcError::Syntax("Mismatched parentheses!".into()))
     } else {
         Ok(balanced)
     }
@@ -39,10 +35,10 @@ fn radix_fmt(number: f64, obase: usize) -> Result<String, CalcError> {
     match (number.is_infinite(), number.is_sign_positive()) {
         (true, true) => return Ok("inf".to_string()),
         (true, false) => return Ok("-inf".to_string()),
-        _ => ()
+        _ => (),
     }
 
-    if number.is_nan(){
+    if number.is_nan() {
         return Ok("nan".to_string());
     }
 
@@ -53,7 +49,7 @@ fn radix_fmt(number: f64, obase: usize) -> Result<String, CalcError> {
     let mut obase_int = String::new();
     let obaseb = BigInt::from_usize(obase).unwrap();
 
-    while &integral >= &obaseb {
+    while integral >= obaseb {
         obase_int.push(table[(&integral % &obaseb).to_usize().unwrap()]);
         integral /= &obaseb;
     }
@@ -81,7 +77,7 @@ fn radix_fmt(number: f64, obase: usize) -> Result<String, CalcError> {
 
 fn thousand_sep(inp: &str) -> String {
     let mut result_string = String::new();
-    for (i,c) in inp.to_string().chars().rev().enumerate() {
+    for (i, c) in inp.to_string().chars().rev().enumerate() {
         if i % 3 == 0 && i != 0 && c.to_string() != "-" {
             result_string.push(',');
         }
@@ -92,11 +88,10 @@ fn thousand_sep(inp: &str) -> String {
 
 pub fn pprint(ans: f64) {
     let ans_string = radix_fmt(ans, CONFIGURATION.base).unwrap();
-    let ans_vector: Vec<&str> = ans_string.split(".").collect();
+    let ans_vector: Vec<&str> = ans_string.split('.').collect();
     match ans_vector.len() {
         1 => println!("{:>10}", thousand_sep(ans_vector[0])),
-        2 => println!("{:>10}.{}", thousand_sep(ans_vector[0]),ans_vector[1]),
-        _ => unreachable!("N-nani?!")
+        2 => println!("{:>10}.{}", thousand_sep(ans_vector[0]), ans_vector[1]),
+        _ => unreachable!("N-nani?!"),
     }
 }
-
