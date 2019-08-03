@@ -26,6 +26,7 @@ impl Highlighter for LineHighlighter {
         let op = eval_math_expression(line, 0f64);
         match op {
             Ok(_) => {
+                let constants = ["e", "pi"];
                 let functions = [
                     "sin"  , "cos"   , "tan"  ,
                     "csc"  , "sec"   , "cot"  ,
@@ -39,9 +40,11 @@ impl Highlighter for LineHighlighter {
                 let ops = Regex::new(r"(?P<o>[\+-/\*%\^!])").unwrap();
                 let mut coloured: String = ops.replace_all(line, "\x1b[33m$o\x1b[0m").into();
 
-                for &f in functions.iter() {
-                    let hfn = format!("\x1b[34m{}\x1b[0m", f);
-                    coloured = coloured.replace(f, &hfn[..]);
+                for c in &constants {
+                    coloured = coloured.replace(c, &format!("\x1b[33m{}\x1b[0m", c));
+                }
+                for f in &functions {
+                    coloured = coloured.replace(f, &format!("\x1b[34m{}\x1b[0m", f));
                 }
                 Owned(coloured.into())
             },
