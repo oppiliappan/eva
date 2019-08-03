@@ -72,6 +72,19 @@ $ cargo install --force --path /path/to/eva
  - binary operators: `+ - * / ^`
  - unary operators: `+ -`
 
+### constants
+
+some constants avaliable in rust standard library.
+
+```
+e      pi
+```
+
+examples:
+```
+pi * 5^2  # πr²
+```
+
 ### functions
 
 all trignometric functions expect input in degrees.
@@ -85,7 +98,7 @@ deg(x) - convert x to degrees
 rad(x) - convert x to radians
 ```
 
-examples:  
+examples:
 ```
 sqrt(sin(30)) # parentheses are mandatory for functions
 
@@ -117,7 +130,7 @@ Domain Error: Out of bounds!
 
 ### todo
 
- - add support for variables (ans, pi, e)
+ - ~~add support for variables (pi, e, _ (previous answer))~~
  - ~~syntax highlighting~~
  - multiple arg functions
  - ~~screenshots~~

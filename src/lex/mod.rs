@@ -77,6 +77,13 @@ pub enum Token {
     RParen
 }
 
+fn get_constants() -> HashMap<&'static str, Token> {
+    return [
+        ("e",  Token::Num(std::f64::consts::E)),
+        ("pi", Token::Num(std::f64::consts::PI)),
+    ].iter().cloned().collect();
+}
+
 fn get_functions() -> HashMap<&'static str, Token> {
     return [
         ("sin",   Function::token_from_fn("sin".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin())),
@@ -123,6 +130,7 @@ fn factorial (n: f64) -> f64 {
 }
 
 pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
+    let constants: HashMap<&str, Token> = get_constants();
     let functions: HashMap<&str, Token> = get_functions();
     let operators: HashMap<char, Token> = get_operators();
 
@@ -179,6 +187,10 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
                         result.push(Token::Num(x));
                         num_vec.clear();
                         last_char_is_op = true;
+                    } else if let Some(token) = constants.get(&char_vec[..]) {
+                        result.push(token.clone());
+                        char_vec.clear();
+                        last_char_is_op = true;
                     }
                     result.push(op_token);
                 } else if last_char_is_op {
@@ -189,7 +201,7 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
                 }
             },
             '/' | '*' | '%' | '^' | '!' => {
-                drain_num_stack(&mut num_vec, &mut result);
+                drain_stack(&mut num_vec, &mut char_vec, &mut result);
                 let operator_token: Token = operators.get(&letter).unwrap().clone();
                 result.push(operator_token);
                 last_char_is_op = true; 
@@ -227,7 +239,7 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
                 last_char_is_op = true; 
             },
             ')' => {
-                drain_num_stack(&mut num_vec, &mut result);
+                drain_stack(&mut num_vec, &mut char_vec, &mut result);
                 result.push(Token::RParen);
                 last_char_is_op = false;  
             },
@@ -238,15 +250,18 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
         }
     }
     // println!("{:?}", result);
-    drain_num_stack(&mut num_vec, &mut result);
+    drain_stack(&mut num_vec, &mut char_vec, &mut result);
     Ok(result)
 }
 
-fn drain_num_stack(num_vec: &mut String, result: &mut Vec<Token>) {
+fn drain_stack(num_vec: &mut String, char_vec: &mut String, result: &mut Vec<Token>) {
     let parse_num = num_vec.parse::<f64>().ok();
     if let Some(x) = parse_num {
         result.push(Token::Num(x));
         num_vec.clear();
+    } else if let Some(token) = get_constants().get(&char_vec[..]) {
+        result.push(token.clone());
+        char_vec.clear();
     }
 }
 

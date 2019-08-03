@@ -192,6 +192,11 @@ mod tests {
         assert_eq!(90., evaled);
     }
     #[test]
+    fn sigmoid_fns() {
+        let evaled = eval_math_expression("1 / (1 + e^-7)", 0f64).unwrap();
+        assert_eq!(0.9990889488, evaled);
+    }
+    #[test]
     fn prev_ans() {
         let evaled = eval_math_expression("_ + 9", 9f64).unwrap();
         assert_eq!(18.0, evaled);
