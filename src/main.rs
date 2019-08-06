@@ -41,9 +41,10 @@ lazy_static! {
 }
 
 fn main() {
+    env_logger::init();
     if !CONFIGURATION.input.is_empty() {
         // command mode //
-        let evaled = eval_math_expression(&CONFIGURATION.input[..], 0f64);
+        let evaled = eval_math_expression(&CONFIGURATION.input[..], Some(0.));
         match evaled {
             Ok(ans) => pprint(ans),
             Err(e) => {
@@ -57,16 +58,25 @@ fn main() {
         let mut rl = create_readline();
 
         // previous answer
-        let mut prev_ans = 0f64;
+        let mut prev_ans = None;
 
         // handle history storage
         let eva_dirs = ProjectDirs::from("com", "NerdyPepper", "eva").unwrap();
         let eva_data_dir = eva_dirs.data_dir();
         let mut history_path = PathBuf::from(eva_data_dir);
+        let mut previous_ans_path = PathBuf::from(eva_data_dir);
         match create_dir_all(eva_data_dir) {
-            Ok(_) => history_path.push("history.txt"),
-            Err(_) => history_path = PathBuf::from(UserDirs::new().unwrap().home_dir()),
+            Ok(_) => {
+                history_path.push("history.txt");
+                previous_ans_path.push("previous_ans.txt");
+            },
+            Err(_) => {
+                history_path      = PathBuf::from(UserDirs::new().unwrap().home_dir());
+                previous_ans_path = PathBuf::from(UserDirs::new().unwrap().home_dir());
+            }
         };
+
+        std::fs::write(&previous_ans_path, "0");
 
         if rl.load_history(history_path.as_path()).is_err() {
             println!("No previous history.")
@@ -81,7 +91,17 @@ fn main() {
                     let evaled = eval_math_expression(&line[..], prev_ans);
                     match evaled {
                         Ok(ans) => {
-                            prev_ans = ans;
+                            use std::io::Write;
+                            use std::fs::OpenOptions;
+                            let mut file = OpenOptions::new()
+                                .write(true)
+                                .create(true)
+                                .open(&previous_ans_path)
+                                .unwrap();
+
+                            prev_ans = Some(ans);
+                            writeln!(file, "{}", ans);
+
                             pprint(ans);
                         }
                         Err(e) => println!("{}", handler(e)),
@@ -148,7 +168,7 @@ fn parse_arguments() -> Configuration {
     }
 }
 
-pub fn eval_math_expression(input: &str, prev_ans: f64) -> Result<f64, CalcError> {
+pub fn eval_math_expression(input: &str, prev_ans: Option<f64>) -> Result<f64, CalcError> {
     let input = input.trim();
     let input = input.replace(" ", "");
     if input.is_empty() {
@@ -202,5 +222,10 @@ mod tests {
     fn prev_ans() {
         let evaled = eval_math_expression("_ + 9", 9f64).unwrap();
         assert_eq!(18.0, evaled);
+    }
+    #[test]
+    fn eval_with_zero_prev() {
+        let evaled = eval_math_expression("9 + _ ", 0f64).unwrap();
+        assert_eq!(9., evaled);
     }
 }
