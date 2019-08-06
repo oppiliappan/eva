@@ -140,3 +140,12 @@ Domain Error: Out of bounds!
  - ~~add unit tests~~
  - ~~lineditor~~ with syntax highlighting
  - ~~add more functions~~
+
+### contributors
+
+the rust community has helped eva come a long way, but these devs deserve a
+special mention for their contributions:
+
+[Ivan Tham](https://github.com/pickfire)  
+[Milan Marković](https://github.com/hepek)  
+[asapokl](https://github.com/kzoper)  
