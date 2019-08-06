@@ -1,4 +1,5 @@
 use std::borrow::Cow::{self, Owned};
+use std::path::PathBuf;
 
 use rustyline::completion::{Completer, FilenameCompleter, Pair};
 use rustyline::config::{Builder, ColorMode, CompletionType, EditMode};
@@ -6,6 +7,8 @@ use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
 use rustyline::hint::{Hinter, HistoryHinter};
 use rustyline::{Context, Editor, Helper};
+
+use directories::ProjectDirs;
 
 use regex::Regex;
 
@@ -17,13 +20,35 @@ pub struct RLHelper {
     hinter: HistoryHinter,
 }
 
-struct LineHighlighter {}
+struct LineHighlighter { }
 impl Highlighter for LineHighlighter {
     fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
         Owned(format!("\x1b[90m{}\x1b[0m", hint))
     }
     fn highlight<'l>(&self, line: &'l str, _: usize) -> Cow<'l, str> {
-        let op = eval_math_expression(line, 0f64);
+        use std::io::{ BufReader, BufRead };
+        use std::fs::OpenOptions;
+
+        let eva_dirs = ProjectDirs::from("com", "NerdyPepper", "eva").unwrap();
+        let eva_data_dir = eva_dirs.data_dir();
+        let mut previous_ans_path= PathBuf::from(eva_data_dir);
+        previous_ans_path.push("previous_ans.txt");
+
+        let file = OpenOptions::new()
+            .create(true)
+            .read(true)
+            .append(true)
+            .open(&previous_ans_path)
+            .unwrap();
+
+        let rdr = BufReader::new(file);
+        let lines = rdr.lines().map(|l| l.unwrap());
+        let prev_ans = lines
+            .last()
+            .unwrap()
+            .parse::<f64>()
+            .ok();
+        let op = eval_math_expression(line, prev_ans);
         match op {
             Ok(_) => {
                 let constants = ["e", "pi"];
@@ -33,7 +58,7 @@ impl Highlighter for LineHighlighter {
                     "asec", "acot",
                 ];
                 let ops = Regex::new(r"(?P<o>[\+-/\*%\^!])").unwrap();
-                let mut coloured: String = ops.replace_all(line, "\x1b[33m$o\x1b[0m").into();
+                let mut coloured: String = ops.replace_all(line, "\x1b[35m$o\x1b[0m").into();
 
                 for c in &constants {
                     coloured = coloured.replace(c, &format!("\x1b[33m{}\x1b[0m", c));
@@ -89,7 +114,7 @@ pub fn create_readline() -> Editor<RLHelper> {
     let mut rl = Editor::with_config(config);
     let h = RLHelper {
         completer: FilenameCompleter::new(),
-        highlighter: LineHighlighter {},
+        highlighter: LineHighlighter { },
         hinter: HistoryHinter {},
     };
     rl.set_helper(Some(h));

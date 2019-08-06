@@ -123,7 +123,7 @@ fn factorial(n: f64) -> f64 {
     n.signum() * (1..=n.abs() as u64).fold(1, |p, n| p * n) as f64
 }
 
-pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
+pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError> {
     let mut num_vec: String = String::new();
     let mut char_vec: String = String::new();
     let mut result: Vec<Token> = vec![];
@@ -149,6 +149,9 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
                 last_char_is_op = false;
             }
             '_' => {
+                if prev_ans.is_none() {
+                    return Err(CalcError::Syntax("No previous answer!".into()));
+                }
                 if !char_vec.is_empty() {
                     if FUNCTIONS.get(&char_vec[..]).is_some() {
                         return Err(CalcError::Syntax(format!(
@@ -169,7 +172,7 @@ pub fn lexer(input: &str, prev_ans: f64) -> Result<Vec<Token>, CalcError> {
                     num_vec.clear();
                 }
                 last_char_is_op = false;
-                result.push(Token::Num(prev_ans));
+                result.push(Token::Num(prev_ans.unwrap()));
             }
             'a'...'z' | 'A'...'Z' => {
                 let parse_num = num_vec.parse::<f64>().ok();
