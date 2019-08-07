@@ -41,7 +41,6 @@ lazy_static! {
 }
 
 fn main() {
-    env_logger::init();
     if !CONFIGURATION.input.is_empty() {
         // command mode //
         let evaled = eval_math_expression(&CONFIGURATION.input[..], Some(0.));
