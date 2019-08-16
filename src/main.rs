@@ -62,8 +62,10 @@ fn main() {
         // handle history storage
         let eva_dirs = ProjectDirs::from("com", "NerdyPepper", "eva").unwrap();
         let eva_data_dir = eva_dirs.data_dir();
+        let eva_cache_dir = eva_dirs.cache_dir();
         let mut history_path = PathBuf::from(eva_data_dir);
-        let mut previous_ans_path = PathBuf::from(eva_data_dir);
+        let mut previous_ans_path = PathBuf::from(eva_cache_dir);
+
         match create_dir_all(eva_data_dir) {
             Ok(_) => {
                 history_path.push("history.txt");
