@@ -131,7 +131,7 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
 
     for letter in input.chars() {
         match letter {
-            '0'...'9' | '.' => {
+            '0'..='9' | '.' => {
                 if !char_vec.is_empty() {
                     if FUNCTIONS.get(&char_vec[..]).is_some() {
                         return Err(CalcError::Syntax(format!(
@@ -174,7 +174,7 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
                 last_char_is_op = false;
                 result.push(Token::Num(prev_ans.unwrap()));
             }
-            'a'...'z' | 'A'...'Z' => {
+            'a'..='z' | 'A'..='Z' => {
                 let parse_num = num_vec.parse::<f64>().ok();
                 if let Some(x) = parse_num {
                     result.push(Token::Num(x));

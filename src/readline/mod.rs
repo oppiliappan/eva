@@ -20,18 +20,18 @@ pub struct RLHelper {
     hinter: HistoryHinter,
 }
 
-struct LineHighlighter { }
+struct LineHighlighter {}
 impl Highlighter for LineHighlighter {
     fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
         Owned(format!("\x1b[90m{}\x1b[0m", hint))
     }
     fn highlight<'l>(&self, line: &'l str, _: usize) -> Cow<'l, str> {
-        use std::io::{ BufReader, BufRead };
         use std::fs::OpenOptions;
+        use std::io::{BufRead, BufReader};
 
         let eva_dirs = ProjectDirs::from("com", "NerdyPepper", "eva").unwrap();
         let eva_data_dir = eva_dirs.data_dir();
-        let mut previous_ans_path= PathBuf::from(eva_data_dir);
+        let mut previous_ans_path = PathBuf::from(eva_data_dir);
         previous_ans_path.push("previous_ans.txt");
 
         let file = OpenOptions::new()
@@ -43,11 +43,10 @@ impl Highlighter for LineHighlighter {
 
         let rdr = BufReader::new(file);
         let lines = rdr.lines().map(|l| l.unwrap());
-        let prev_ans = lines
-            .last()
-            .unwrap()
-            .parse::<f64>()
-            .ok();
+        let prev_ans = match lines.last() {
+            Some(val) => val.parse::<f64>().ok(),
+            None => None,
+        };
         let op = eval_math_expression(line, prev_ans);
         match op {
             Ok(_) => {
@@ -114,7 +113,7 @@ pub fn create_readline() -> Editor<RLHelper> {
     let mut rl = Editor::with_config(config);
     let h = RLHelper {
         completer: FilenameCompleter::new(),
-        highlighter: LineHighlighter { },
+        highlighter: LineHighlighter {},
         hinter: HistoryHinter {},
     };
     rl.set_helper(Some(h));

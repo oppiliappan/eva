@@ -66,18 +66,20 @@ fn main() {
         let mut history_path = PathBuf::from(eva_data_dir);
         let mut previous_ans_path = PathBuf::from(eva_cache_dir);
 
-        match create_dir_all(eva_data_dir) {
-            Ok(_) => {
-                history_path.push("history.txt");
-                previous_ans_path.push("previous_ans.txt");
-            },
-            Err(_) => {
-                history_path      = PathBuf::from(UserDirs::new().unwrap().home_dir());
-                previous_ans_path = PathBuf::from(UserDirs::new().unwrap().home_dir());
-            }
-        };
+        if let Err(_) = create_dir_all(eva_data_dir) {
+            history_path = PathBuf::from(UserDirs::new().unwrap().home_dir());
+        }
+        if let Err(_) = create_dir_all(eva_cache_dir) {
+            previous_ans_path = PathBuf::from(UserDirs::new().unwrap().home_dir());
+        }
+        history_path.push("history.txt");
+        previous_ans_path.push("previous_ans.txt");
 
-        std::fs::write(&previous_ans_path, "0");
+        if let Err(err) = std::fs::write(&previous_ans_path, "0") {
+            println!("Could not write to previous_ans_path");
+            println!("{:?}", err);
+            std::process::exit(1);
+        }
 
         if rl.load_history(history_path.as_path()).is_err() {
             println!("No previous history.")
@@ -92,18 +94,27 @@ fn main() {
                     let evaled = eval_math_expression(&line[..], prev_ans);
                     match evaled {
                         Ok(ans) => {
-                            use std::io::Write;
                             use std::fs::OpenOptions;
-                            let mut file = OpenOptions::new()
+                            use std::io::Write;
+                            prev_ans = Some(ans);
+                            pprint(ans);
+                            match OpenOptions::new()
                                 .write(true)
                                 .create(true)
                                 .open(&previous_ans_path)
-                                .unwrap();
-
-                            prev_ans = Some(ans);
-                            writeln!(file, "{}", ans);
-
-                            pprint(ans);
+                            {
+                                Ok(mut file) => {
+                                    if let Err(err) = writeln!(file, "{}", ans) {
+                                        println!(
+                                            "Error while writing previous answer to file: {}",
+                                            err
+                                        )
+                                    }
+                                }
+                                Err(err) => {
+                                    println!("Error while writing previous answer to file: {}", err)
+                                }
+                            }
                         }
                         Err(e) => println!("{}", handler(e)),
                     };
