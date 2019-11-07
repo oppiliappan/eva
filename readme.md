@@ -1,11 +1,11 @@
 
-![heroimg.png](https://files.nerdypepper.me/6G.png)
+![heroimg.png](https://files.nerdypepper.tech/6G.png)
 
 # eva
 
 simple calculator REPL, similar to `bc(1)`, with syntax highlighting and persistent history
 
-![eva.png](https://files.nerdypepper.me/kP.png)
+![eva.png](https://files.nerdypepper.tech/kP.png)
 
 ### installation
 
