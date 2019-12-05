@@ -202,42 +202,42 @@ mod tests {
 
     #[test]
     fn basic_ops() {
-        let evaled = eval_math_expression("6*2 + 3 + 12 -3", 0f64).unwrap();
+        let evaled = eval_math_expression("6*2 + 3 + 12 -3", Some(0f64)).unwrap();
         assert_eq!(24., evaled);
     }
     #[test]
     fn trignometric_fns() {
-        let evaled = eval_math_expression("sin(30) + tan(45", 0f64).unwrap();
+        let evaled = eval_math_expression("sin(30) + tan(45", Some(0f64)).unwrap();
         assert_eq!(1.5, evaled);
     }
     #[test]
     fn brackets() {
-        let evaled = eval_math_expression("(((1 + 2 + 3) ^ 2 ) - 4)", 0f64).unwrap();
+        let evaled = eval_math_expression("(((1 + 2 + 3) ^ 2 ) - 4)", Some(0f64)).unwrap();
         assert_eq!(32., evaled);
     }
     #[test]
     fn floating_ops() {
-        let evaled = eval_math_expression("1.2816 + 1 + 1.2816/1.2", 0f64).unwrap();
+        let evaled = eval_math_expression("1.2816 + 1 + 1.2816/1.2", Some(0f64)).unwrap();
         assert_eq!(3.3496, evaled);
     }
     #[test]
     fn inverse_trignometric_fns() {
-        let evaled = eval_math_expression("deg(asin(1) + acos(1))", 0f64).unwrap();
+        let evaled = eval_math_expression("deg(asin(1) + acos(1))", Some(0f64)).unwrap();
         assert_eq!(90., evaled);
     }
     #[test]
     fn sigmoid_fns() {
-        let evaled = eval_math_expression("1 / (1 + e^-7)", 0f64).unwrap();
+        let evaled = eval_math_expression("1 / (1 + e^-7)", Some(0f64)).unwrap();
         assert_eq!(0.9990889488, evaled);
     }
     #[test]
     fn prev_ans() {
-        let evaled = eval_math_expression("_ + 9", 9f64).unwrap();
+        let evaled = eval_math_expression("_ + 9", Some(9f64)).unwrap();
         assert_eq!(18.0, evaled);
     }
     #[test]
     fn eval_with_zero_prev() {
-        let evaled = eval_math_expression("9 + _ ", 0f64).unwrap();
+        let evaled = eval_math_expression("9 + _ ", Some(0f64)).unwrap();
         assert_eq!(9., evaled);
     }
 }
