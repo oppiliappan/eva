@@ -9,6 +9,11 @@ simple calculator REPL, similar to `bc(1)`, with syntax highlighting and persist
 
 ### installation
 
+- Homebrew
+```shell
+$ brew install eva
+```
+
 - crates.io
 ```shell
 $ cargo install eva
