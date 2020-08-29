@@ -36,8 +36,19 @@ struct Configuration {
     input: String,
 }
 
+#[cfg(not(test))]
 lazy_static! {
     static ref CONFIGURATION: Configuration = parse_arguments();
+}
+
+#[cfg(test)]
+lazy_static! {
+    static ref CONFIGURATION: Configuration = Configuration {
+        radian_mode: false,
+        fix: 10,
+        base: 10,
+        input: "".to_string(),
+    };
 }
 
 fn main() {
