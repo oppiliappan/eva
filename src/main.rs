@@ -227,6 +227,11 @@ mod tests {
         assert_eq!(32., evaled);
     }
     #[test]
+    fn exponentiation() {
+        let evaled = eval_math_expression("2 ** 2 ** 3", None).unwrap();
+        assert_eq!(256., evaled); // 2^(2^3), not (2^2)^3
+    }
+    #[test]
     fn floating_ops() {
         let evaled = eval_math_expression("1.2816 + 1 + 1.2816/1.2", Some(0f64)).unwrap();
         assert_eq!(3.3496, evaled);

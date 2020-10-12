@@ -129,7 +129,8 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
     let mut result: Vec<Token> = vec![];
     let mut last_char_is_op = true;
 
-    for letter in input.chars() {
+    let mut chars = input.chars().peekable();
+    while let Some(mut letter) = chars.next() {
         match letter {
             '0'..='9' | '.' => {
                 if !char_vec.is_empty() {
@@ -209,6 +210,11 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
             }
             '/' | '*' | '%' | '^' | '!' => {
                 drain_stack(&mut num_vec, &mut char_vec, &mut result);
+                if letter == '*' && chars.peek() == Some(&'*') {
+                    // Accept `**` operator as meaning `^` (exponentation).
+                    let _ = chars.next();
+                    letter = '^';
+                }
                 let operator_token: Token = OPERATORS.get(&letter).unwrap().clone();
                 result.push(operator_token);
                 last_char_is_op = true;
