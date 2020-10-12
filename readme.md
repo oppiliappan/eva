@@ -74,7 +74,7 @@ $ cargo install --force --path /path/to/eva
 
 ### operators
 
- - binary operators: `+ - * / ^`
+ - binary operators: `+ - * / ^ **`
  - unary operators: `+ -`
 
 ### constants
