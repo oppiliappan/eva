@@ -70,14 +70,14 @@ pub enum Token {
 }
 
 lazy_static! {
-    static ref CONSTANTS: HashMap<&'static str, Token> = {
+    pub static ref CONSTANTS: HashMap<&'static str, Token> = {
         let mut m = HashMap::new();
         m.insert("e",  Token::Num(std::f64::consts::E));
         m.insert("pi", Token::Num(std::f64::consts::PI));
         m
     };
 
-    static ref FUNCTIONS: HashMap<&'static str, Token> = {
+    pub static ref FUNCTIONS: HashMap<&'static str, Token> = {
         let mut m = HashMap::new();
         m.insert("sin",   Function::token_from_fn("sin".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin()));
         m.insert("cos",   Function::token_from_fn("cos".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos()));
@@ -106,7 +106,7 @@ lazy_static! {
         m
     };
 
-    static ref OPERATORS: HashMap<char, Token> = {
+    pub static ref OPERATORS: HashMap<char, Token> = {
         let mut m = HashMap::new();
         m.insert('+', Operator::token_from_op('+', |x, y| x + y, 2, true));
         m.insert('-', Operator::token_from_op('-', |x, y| x - y, 2, true));

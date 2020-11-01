@@ -193,7 +193,9 @@ fn parse_arguments() -> Configuration {
 
 pub fn eval_math_expression(input: &str, prev_ans: Option<f64>) -> Result<f64, CalcError> {
     let input = input.trim();
-    let input = input.replace(" ", "");
+    if input == "help" {
+        return Err(CalcError::Help);
+    }
     if input.is_empty() {
         return Ok(0.);
     }

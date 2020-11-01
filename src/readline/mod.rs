@@ -12,6 +12,7 @@ use directories::ProjectDirs;
 
 use regex::Regex;
 
+use crate::error::CalcError;
 use crate::eval_math_expression;
 
 pub struct RLHelper {
@@ -67,6 +68,7 @@ impl Highlighter for LineHighlighter {
                 }
                 Owned(coloured)
             }
+            Err(CalcError::Help) => Owned(line.replace("help", "\x1b[36mhelp\x1b[0m")),
             Err(_) => Owned(format!("\x1b[31m{}\x1b[0m", line)),
         }
     }
