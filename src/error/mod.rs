@@ -30,30 +30,30 @@ pub fn handler(e: CalcError) -> String {
         },
         CalcError::Syntax(details) => format!("Syntax Error: {}", details),
         CalcError::Parser(details) => format!("Parser Error: {}", details),
-        CalcError::Help => format!(
-            "Constants\n{}\nFunctions\n{}\nOperators\n{}\n",
-            blocks(lex::CONSTANTS.keys().cloned()),
-            blocks(lex::FUNCTIONS.keys().cloned()),
-            {
-                let l: Vec<_> = lex::OPERATORS.keys().map(|c| c.to_string()).collect();
-                l.join(" ")
+        CalcError::Help => {
+            // calculate max width but ideally this should be calculated once
+            let mut max_width = 79; // capped at 79
+            if let Some((w, _)) = term_size::dimensions() {
+                if w < max_width {
+                    max_width = w;
+                }
             }
-        ),
+            let operators: Vec<_> = lex::OPERATORS.keys().map(|c| c.to_string()).collect();
+            format!(
+                "Constants\n{}\nFunctions\n{}\nOperators\n{}\n",
+                blocks(max_width, lex::CONSTANTS.keys().cloned()),
+                blocks(max_width, lex::FUNCTIONS.keys().cloned()),
+                operators.join(" ")
+            )
+        }
     }
 }
 
 /// Convert iterator into strings of chunks of 8 right padded with space.
-fn blocks(mut iter: impl Iterator<Item = &'static str> + ExactSizeIterator) -> String {
-    // calculate max width but ideally this should be calculated once
-    let mut max_width = 79; // capped at 79
-    if let Ok(s) = std::env::var("COLUMNS") {
-        if let Ok(n) = s.parse() {
-            if n < max_width {
-                max_width = n;
-            }
-        }
-    }
-
+fn blocks(
+    max_width: usize,
+    mut iter: impl Iterator<Item = &'static str> + ExactSizeIterator,
+) -> String {
     // multiply by eight since we are formatting it into chunks of 8
     let items_per_line = max_width / 8;
     let full_bytes = (iter.len() - iter.len() % items_per_line) * 8;
