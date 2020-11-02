@@ -5,9 +5,8 @@
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 
-use crate::CONFIGURATION;
-
 use crate::error::{CalcError, Math};
+use crate::CONFIGURATION;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Operator {

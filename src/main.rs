@@ -192,8 +192,7 @@ fn parse_arguments() -> Configuration {
 }
 
 pub fn eval_math_expression(input: &str, prev_ans: Option<f64>) -> Result<f64, CalcError> {
-    let input = input.trim();
-    let input = input.replace(" ", "");
+    let input = input.trim().replace(" ", "");
     if input.is_empty() {
         return Ok(0.);
     }
