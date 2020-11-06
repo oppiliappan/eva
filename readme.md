@@ -79,7 +79,7 @@ $ cargo install --force --path /path/to/eva
 
 ### constants
 
-some constants avaliable in rust standard library.
+some constants available in rust standard library.
 
 ```
 e      pi
@@ -92,7 +92,7 @@ pi * 5^2  # πr²
 
 ### functions
 
-all trignometric functions expect input in degrees.
+all trigonometric functions expect input in degrees.
 
 ```
 sin    cos     tan    csc    sec    cot    sinh   cosh   tanh
