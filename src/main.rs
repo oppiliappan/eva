@@ -22,7 +22,7 @@ use crate::parse::*;
 use crate::readline::*;
 
 // extern crates
-use clap::{App, Arg};
+use clap::{App, AppSettings, Arg};
 use directories::{ProjectDirs, UserDirs};
 use lazy_static::lazy_static;
 use rustyline::error::ReadlineError;
@@ -150,6 +150,7 @@ fn parse_arguments() -> Configuration {
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
+        .global_setting(AppSettings::ColoredHelp)
         .arg(
             Arg::with_name("fix")
                 .short("f")
