@@ -125,6 +125,15 @@ log(100)      # yes
 6
 ```
 
+ - use previous answer with `_`
+```
+> sin(pi)
+0.0548036650
+> _^2
+0.0030034417
+>
+```
+
 - super neat error handling
 ```
 > 1 + ln(-1)
