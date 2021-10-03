@@ -14,6 +14,14 @@ pub enum CalcError {
     Help,
 }
 
+impl std::fmt::Display for CalcError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl std::error::Error for CalcError {}
+
 #[derive(Debug)]
 pub enum Math {
     DivideByZero,

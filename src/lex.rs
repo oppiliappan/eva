@@ -2,7 +2,7 @@
  * Refer to LICENCE for more information.
  * */
 
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
 use crate::error::{CalcError, Math};
@@ -67,16 +67,14 @@ pub enum Token {
     LParen,
     RParen,
 }
-
-lazy_static! {
-    pub static ref CONSTANTS: HashMap<&'static str, Token> = {
+    pub static CONSTANTS: Lazy<HashMap<&'static str, Token>> = Lazy::new(|| {
         let mut m = HashMap::new();
         m.insert("e",  Token::Num(std::f64::consts::E));
         m.insert("pi", Token::Num(std::f64::consts::PI));
         m
-    };
+    });
 
-    pub static ref FUNCTIONS: HashMap<&'static str, Token> = {
+    pub static FUNCTIONS: Lazy<HashMap<&'static str, Token>> = Lazy::new(|| {
         let mut m = HashMap::new();
         m.insert("sin",   Function::token_from_fn("sin".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin()));
         m.insert("cos",   Function::token_from_fn("cos".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos()));
@@ -103,9 +101,9 @@ lazy_static! {
         m.insert("acot",  Function::token_from_fn("acot".into(),  |x| (1./x).atan()));
         // single arg function s can be added here
         m
-    };
+    });
 
-    pub static ref OPERATORS: HashMap<char, Token> = {
+    pub static OPERATORS: Lazy<HashMap<char, Token>> = Lazy::new(|| {
         let mut m = HashMap::new();
         m.insert('+', Operator::token_from_op('+', |x, y| x + y, 2, true));
         m.insert('-', Operator::token_from_op('-', |x, y| x - y, 2, true));
@@ -115,8 +113,7 @@ lazy_static! {
         m.insert('^', Operator::token_from_op('^', |x, y| x.powf(y) , 4, false));
         m.insert('!', Operator::token_from_op('!', |x, _| factorial(x) , 4, true));
         m
-    };
-}
+    });
 
 fn factorial(n: f64) -> f64 {
     n.signum() * (1..=n.abs() as u64).fold(1, |p, n| p * n) as f64

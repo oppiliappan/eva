@@ -1,0 +1,36 @@
+name: build
+
+on: 
+  push: 
+  pull_request:
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    
+    strategy:
+      matrix:
+        config:
+        - name: ubuntu-build
+          os: ubuntu-latest
+
+        - name: macos-build
+          os: macos-latest
+
+        - name: windows-build
+          os: windows-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Build
+      run: cargo build --release
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: eva_${{ matrix.config.os }}_${{ github.run_id }}
+        path: |
+          target/release/eva.exe
+          target/release/eva

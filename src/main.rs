@@ -24,7 +24,7 @@ use crate::readline::*;
 // extern crates
 use clap::{App, AppSettings, Arg};
 use directories::{ProjectDirs, UserDirs};
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use rustyline::error::ReadlineError;
 
 /* end of imports */
@@ -37,19 +37,15 @@ struct Configuration {
 }
 
 #[cfg(not(test))]
-lazy_static! {
-    static ref CONFIGURATION: Configuration = parse_arguments();
-}
+static CONFIGURATION: Lazy<Configuration> = Lazy::new(|| parse_arguments());
 
 #[cfg(test)]
-lazy_static! {
-    static ref CONFIGURATION: Configuration = Configuration {
+static CONFIGURATION: Lazy<Configuration> = Lazy::new(|| Configuration {
         radian_mode: false,
         fix: 10,
         base: 10,
         input: "".to_string(),
-    };
-}
+    });
 
 fn main() {
     if !CONFIGURATION.input.is_empty() {

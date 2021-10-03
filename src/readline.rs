@@ -1,7 +1,7 @@
 use std::borrow::Cow::{self, Owned};
 use std::path::PathBuf;
 
-use rustyline::completion::{Completer, FilenameCompleter, Pair};
+use rustyline::{completion::{Completer, FilenameCompleter, Pair}, validate::{ValidationContext, ValidationResult, Validator}};
 use rustyline::config::{Builder, ColorMode, CompletionType, EditMode};
 use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
@@ -98,6 +98,19 @@ impl Completer for RLHelper {
 impl Hinter for RLHelper {
     fn hint(&self, line: &str, a: usize, b: &Context) -> Option<String> {
         self.hinter.hint(line, a, b)
+    }
+
+    type Hint = String;
+}
+
+impl Validator for RLHelper {
+    fn validate(&self, _: &mut ValidationContext) -> rustyline::Result<ValidationResult> {
+        use ValidationResult::Valid;
+        Ok(Valid(None))
+    }
+
+    fn validate_while_typing(&self) -> bool {
+        false
     }
 }
 
