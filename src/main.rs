@@ -217,7 +217,7 @@ mod tests {
     }
     #[test]
     fn trignometric_fns() {
-        let evaled = eval_math_expression("sin(30) + tan(45", Some(0f64)).unwrap();
+        let evaled = eval_math_expression("sin(30) + tan(45)", Some(0f64)).unwrap();
         assert_eq!(1.5, evaled);
     }
     #[test]
@@ -254,5 +254,10 @@ mod tests {
     fn eval_with_zero_prev() {
         let evaled = eval_math_expression("9 + _ ", Some(0f64)).unwrap();
         assert_eq!(9., evaled);
+    }
+    #[test]
+    #[should_panic]
+    fn test_mismatched_parentheses() {
+        let evaled = eval_math_expression("sin(30) + tan(45", Some(0f64)).unwrap();
     }
 }
