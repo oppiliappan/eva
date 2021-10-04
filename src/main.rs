@@ -37,15 +37,15 @@ struct Configuration {
 }
 
 #[cfg(not(test))]
-static CONFIGURATION: Lazy<Configuration> = Lazy::new(|| parse_arguments());
+static CONFIGURATION: Lazy<Configuration> = Lazy::new(parse_arguments);
 
 #[cfg(test)]
 static CONFIGURATION: Lazy<Configuration> = Lazy::new(|| Configuration {
-        radian_mode: false,
-        fix: 10,
-        base: 10,
-        input: "".to_string(),
-    });
+    radian_mode: false,
+    fix: 10,
+    base: 10,
+    input: "".to_string(),
+});
 
 fn main() {
     if !CONFIGURATION.input.is_empty() {
@@ -73,10 +73,10 @@ fn main() {
         let mut history_path = PathBuf::from(eva_data_dir);
         let mut previous_ans_path = PathBuf::from(eva_cache_dir);
 
-        if let Err(_) = create_dir_all(eva_data_dir) {
+        if create_dir_all(eva_data_dir).is_err() {
             history_path = PathBuf::from(UserDirs::new().unwrap().home_dir());
         }
-        if let Err(_) = create_dir_all(eva_cache_dir) {
+        if create_dir_all(eva_cache_dir).is_err() {
             previous_ans_path = PathBuf::from(UserDirs::new().unwrap().home_dir());
         }
         history_path.push("history.txt");

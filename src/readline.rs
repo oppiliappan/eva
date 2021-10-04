@@ -1,11 +1,14 @@
 use std::borrow::Cow::{self, Owned};
 use std::path::PathBuf;
 
-use rustyline::{completion::{Completer, FilenameCompleter, Pair}, validate::{ValidationContext, ValidationResult, Validator}};
 use rustyline::config::{Builder, ColorMode, CompletionType, EditMode};
 use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
 use rustyline::hint::{Hinter, HistoryHinter};
+use rustyline::{
+    completion::{Completer, FilenameCompleter, Pair},
+    validate::{ValidationContext, ValidationResult, Validator},
+};
 use rustyline::{Context, Editor, Helper};
 
 use directories::ProjectDirs;

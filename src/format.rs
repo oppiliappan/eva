@@ -1,4 +1,6 @@
 extern crate num;
+use std::cmp::Ordering;
+
 use num::{BigInt, FromPrimitive, ToPrimitive};
 
 use crate::error::{CalcError, Math};
@@ -16,14 +18,14 @@ pub fn autobalance_parens(input: &str) -> Result<String, CalcError> {
         }
     }
 
-    if left_parens > right_parens {
-        let extras = ")".repeat(left_parens - right_parens);
-        balanced.push_str(&extras[..]);
-        Ok(balanced)
-    } else if left_parens < right_parens {
-        Err(CalcError::Syntax("Mismatched parentheses!".into()))
-    } else {
-        Ok(balanced)
+    match left_parens.cmp(&right_parens) {
+        Ordering::Less => {
+            let extras = ")".repeat(left_parens - right_parens);
+            balanced.push_str(&extras[..]);
+            Ok(balanced)
+        }
+        Ordering::Greater => Err(CalcError::Syntax("Mismatched parentheses!".into())),
+        _ => Ok(balanced),
     }
 }
 
