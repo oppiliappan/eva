@@ -55,7 +55,7 @@ impl Highlighter for LineHighlighter {
                 let functions = [
                     "sin", "cos", "tan", "csc", "sec", "cot", "sinh", "cosh", "tanh", "ln", "log",
                     "sqrt", "ceil", "floor", "rad", "deg", "abs", "asin", "acos", "atan", "acsc",
-                    "asec", "acot",
+                    "asec", "acot", "exp2", "exp"
                 ];
                 let ops = Regex::new(r"(?P<o>[\+-/\*%\^!])").unwrap();
                 let mut coloured: String = ops.replace_all(line, "\x1b[35m$o\x1b[0m").into();
