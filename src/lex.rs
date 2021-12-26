@@ -101,6 +101,7 @@ lazy_static! {
         m.insert("acsc",  Function::token_from_fn("acsc".into(),  |x| (1./x).asin()));
         m.insert("asec",  Function::token_from_fn("asec".into(),  |x| (1./x).acos()));
         m.insert("acot",  Function::token_from_fn("acot".into(),  |x| (1./x).atan()));
+        m.insert("exp",   Function::token_from_fn("exp".into(),   |x| x.exp()));
         // single arg function s can be added here
         m
     };
