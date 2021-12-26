@@ -102,6 +102,7 @@ lazy_static! {
         m.insert("asec",  Function::token_from_fn("asec".into(),  |x| (1./x).acos()));
         m.insert("acot",  Function::token_from_fn("acot".into(),  |x| (1./x).atan()));
         m.insert("exp",   Function::token_from_fn("exp".into(),   |x| x.exp()));
+        m.insert("exp2",  Function::token_from_fn("exp2".into(),  |x| x.exp2()));
         // single arg function s can be added here
         m
     };
@@ -135,19 +136,23 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
             '0'..='9' | '.' => {
                 if !char_vec.is_empty() {
                     if FUNCTIONS.get(&char_vec[..]).is_some() {
-                        return Err(CalcError::Syntax(format!(
-                            "Function '{}' expected parentheses",
-                            char_vec
-                        )));
+                        char_vec.push(letter);
+                        if !FUNCTIONS.get(&char_vec[..]).is_some() {
+                            return Err(CalcError::Syntax(format!(
+                                "Function '{}' expected parentheses",
+                                &char_vec[..char_vec.chars().count()-1]
+                            )));
+                        }
                     } else {
                         return Err(CalcError::Syntax(format!(
                             "Unexpected character '{}'",
                             char_vec
                         )));
                     }
+                } else {
+                    num_vec.push(letter);
+                    last_char_is_op = false;
                 }
-                num_vec.push(letter);
-                last_char_is_op = false;
             }
             '_' => {
                 if prev_ans.is_none() {
