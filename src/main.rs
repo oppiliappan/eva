@@ -259,4 +259,9 @@ mod tests {
         let evaled = eval_math_expression("9 + _ ", Some(0f64)).unwrap();
         assert_eq!(9., evaled);
     }
+    #[test]
+    fn eval_const_multiplication() {
+        let evaled = eval_math_expression("e2", None).unwrap();
+        assert_eq!(5.4365636569, evaled);
+    }
 }

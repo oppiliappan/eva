@@ -143,6 +143,12 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
                                 &char_vec[..char_vec.chars().count()-1]
                             )));
                         }
+                    } else if CONSTANTS.get(&char_vec[..]).is_some() {
+                        result.push(CONSTANTS.get(&char_vec[..]).unwrap().clone());
+                        result.push(OPERATORS.get(&'*').unwrap().clone());
+                        char_vec.clear();
+                        num_vec.push(letter);
+                        last_char_is_op = false;
                     } else {
                         return Err(CalcError::Syntax(format!(
                             "Unexpected character '{}'",
