@@ -62,10 +62,12 @@ impl Highlighter for LineHighlighter {
                 let mut coloured: String = ops.replace_all(line, "\x1b[35m$o\x1b[0m").into();
 
                 for c in &constants {
-                    coloured = coloured.replace(c, &format!("\x1b[33m{}\x1b[0m", c));
+                    let re = Regex::new(format!("(?P<o>{})(?P<r>(\x1b\\[35m)?([\\+-/\\*%\\^! ]|$))", c).as_str()).unwrap();
+                    coloured = re.replace_all(&coloured, "\x1b[33m$o\x1b[0m$r").into();
                 }
                 for f in &functions {
-                    coloured = coloured.replace(f, &format!("\x1b[34m{}\x1b[0m", f));
+                    let re = Regex::new(format!("(?P<o>{})(?P<r>(\\(|$))", f).as_str()).unwrap();
+                    coloured = re.replace_all(&coloured, "\x1b[34m$o\x1b[0m$r").into();
                 }
                 Owned(coloured)
             }
