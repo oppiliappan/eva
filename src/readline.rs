@@ -7,6 +7,7 @@ use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
 use rustyline::hint::{Hinter, HistoryHinter};
 use rustyline::{Context, Editor, Helper};
+use rustyline::validate::Validator;
 
 use directories::ProjectDirs;
 
@@ -75,6 +76,7 @@ impl Highlighter for LineHighlighter {
 }
 
 impl Highlighter for RLHelper {
+    fn highlight_char(&self, _: &str, _: usize) -> bool { true }
     fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
         self.highlighter.highlight_hint(hint)
     }
@@ -96,10 +98,13 @@ impl Completer for RLHelper {
 }
 
 impl Hinter for RLHelper {
-    fn hint(&self, line: &str, a: usize, b: &Context) -> Option<String> {
+    type Hint = String;
+    fn hint(&self, line: &str, a: usize, b: &Context) -> Option<Self::Hint> {
         self.hinter.hint(line, a, b)
     }
 }
+
+impl Validator for RLHelper {}
 
 impl Helper for RLHelper {}
 
