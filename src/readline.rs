@@ -15,6 +15,7 @@ use regex::Regex;
 
 use crate::error::CalcError;
 use crate::eval_math_expression;
+use crate::lex::{CONSTANTS, FUNCTIONS};
 
 pub struct RLHelper {
     completer: FilenameCompleter,
@@ -52,20 +53,16 @@ impl Highlighter for LineHighlighter {
         let op = eval_math_expression(line, prev_ans);
         match op {
             Ok(_) => {
-                let constants = ["e", "pi"];
-                let functions = [
-                    "sin", "cos", "tan", "csc", "sec", "cot", "sinh", "cosh", "tanh", "ln", "log",
-                    "sqrt", "ceil", "floor", "rad", "deg", "abs", "asin", "acos", "atan", "acsc",
-                    "asec", "acot", "exp2", "exp"
-                ];
+                let constants = CONSTANTS.keys();
+                let functions = FUNCTIONS.keys();
                 let ops = Regex::new(r"(?P<o>[\+-/\*%\^!])").unwrap();
                 let mut coloured: String = ops.replace_all(line, "\x1b[35m$o\x1b[0m").into();
 
-                for c in &constants {
+                for c in constants {
                     let re = Regex::new(format!("(?P<o>{})(?P<r>(\x1b\\[35m)?([\\+-/\\*%\\^! ]|$))", c).as_str()).unwrap();
                     coloured = re.replace_all(&coloured, "\x1b[33m$o\x1b[0m$r").into();
                 }
-                for f in &functions {
+                for f in functions {
                     let re = Regex::new(format!("(?P<o>{})(?P<r>(\\(|$))", f).as_str()).unwrap();
                     coloured = re.replace_all(&coloured, "\x1b[34m$o\x1b[0m$r").into();
                 }
