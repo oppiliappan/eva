@@ -264,4 +264,30 @@ mod tests {
         let evaled = eval_math_expression("e2", None).unwrap();
         assert_eq!(5.4365636569, evaled);
     }
+    #[test]
+    fn eval_round() {
+        let evaled = eval_math_expression("round(0.5)+round(2.4)", None).unwrap();
+        assert_eq!(3., evaled);
+    }
+    #[test]
+    fn eval_exp2() {
+        assert_eq!(
+            256.,
+            eval_math_expression("exp2(8)", None).unwrap()
+        );
+    }
+    #[test]
+    fn eval_exp() {
+        assert_eq!(
+            20.0855369232 as f64,
+            eval_math_expression("exp(3)", None).unwrap()
+        );
+    }
+    #[test]
+    fn eval_e_times_n() {
+        assert_eq!(
+            0. as f64,
+            eval_math_expression("e0", None).unwrap()
+        );
+    }
 }
