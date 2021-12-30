@@ -39,18 +39,42 @@ impl Operator {
     }
 }
 
+struct NFunctionArgs {
+    args: Vec<f64>,
+}
+
+impl NFunctionArgs {
+    fn new(arity: usize, args: Vec<f64>) -> NFunctionArgs {
+        if arity != args.len() {
+            panic!("Unexpected, arity != args.len()");
+        }
+        NFunctionArgs { args }
+    }
+    fn get_n(&self, n: usize) -> f64 {
+        *self.args.get(n).unwrap()
+    }
+}
+
+macro_rules! arity_1 {
+    (|$a:ident| $b:expr) => { |n: NFunctionArgs| -> f64 { let $a = n.get_n(0); $b } }
+}
+macro_rules! arity_2 {
+    (|$a:ident, $b:ident| $c:expr) => { |n: NFunctionArgs| -> f64 { let ($a, $b) = (n.get_n(0), n.get_n(1)); $c } }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Function {
-    token: String,
-    relation: fn(f64) -> f64,
+    pub token: String,
+    relation: fn(NFunctionArgs) -> f64,
+    pub arity: usize,
 }
 
 impl Function {
-    fn token_from_fn(token: String, relation: fn(f64) -> f64) -> Token {
-        Token::Function(Function { token, relation })
+    fn token_from_fn(token: String, relation: fn(NFunctionArgs) -> f64, arity: usize) -> Token {
+        Token::Function(Function { token, relation, arity })
     }
-    pub fn apply(self, arg: f64) -> Result<f64, CalcError> {
-        let result = (self.relation)(arg);
+    pub fn apply(self, args: Vec<f64>) -> Result<f64, CalcError> {
+        let result = (self.relation)(NFunctionArgs::new(self.arity, args));
         if !result.is_finite() {
             Err(CalcError::Math(Math::OutOfBounds))
         } else {
@@ -66,6 +90,7 @@ pub enum Token {
     Function(Function),
     LParen,
     RParen,
+    Comma,
 }
 
 lazy_static! {
@@ -78,32 +103,34 @@ lazy_static! {
 
     pub static ref FUNCTIONS: HashMap<&'static str, Token> = {
         let mut m = HashMap::new();
-        m.insert("sin",   Function::token_from_fn("sin".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin()));
-        m.insert("cos",   Function::token_from_fn("cos".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos()));
-        m.insert("tan",   Function::token_from_fn("tan".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).tan()));
-        m.insert("csc",   Function::token_from_fn("csc".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin().recip()));
-        m.insert("sec",   Function::token_from_fn("sec".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos().recip()));
-        m.insert("cot",   Function::token_from_fn("cot".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).tan().recip()));
-        m.insert("sinh",  Function::token_from_fn("sinh".into(),  |x| x.sinh()));
-        m.insert("cosh",  Function::token_from_fn("cosh".into(),  |x| x.cosh()));
-        m.insert("tanh",  Function::token_from_fn("tanh".into(),  |x| x.tanh()));
-        m.insert("ln",    Function::token_from_fn("ln".into(),    |x| x.ln()));
-        m.insert("log",   Function::token_from_fn("log".into(),   |x| x.log10()));
-        m.insert("sqrt",  Function::token_from_fn("sqrt".into(),  |x| x.sqrt()));
-        m.insert("ceil",  Function::token_from_fn("ceil".into(),  |x| x.ceil()));
-        m.insert("floor", Function::token_from_fn("floor".into(), |x| x.floor()));
-        m.insert("rad",   Function::token_from_fn("rad".into(),   |x| x.to_radians()));
-        m.insert("deg",   Function::token_from_fn("deg".into(),   |x| x.to_degrees()));
-        m.insert("abs",   Function::token_from_fn("abs".into(),   |x| x.abs()));
-        m.insert("asin",  Function::token_from_fn("asin".into(),  |x| x.asin()));
-        m.insert("acos",  Function::token_from_fn("acos".into(),  |x| x.acos()));
-        m.insert("atan",  Function::token_from_fn("atan".into(),  |x| x.atan()));
-        m.insert("acsc",  Function::token_from_fn("acsc".into(),  |x| (1./x).asin()));
-        m.insert("asec",  Function::token_from_fn("asec".into(),  |x| (1./x).acos()));
-        m.insert("acot",  Function::token_from_fn("acot".into(),  |x| (1./x).atan()));
-        m.insert("exp",   Function::token_from_fn("exp".into(),   |x| x.exp()));
-        m.insert("exp2",  Function::token_from_fn("exp2".into(),  |x| x.exp2()));
-        m.insert("round", Function::token_from_fn("round".into(), |x| x.round()));
+        m.insert("sin",   Function::token_from_fn("sin".into(),   arity_1!(|x| is_radian_mode(x, CONFIGURATION.radian_mode).sin()), 1));
+        m.insert("cos",   Function::token_from_fn("cos".into(),   arity_1!(|x| is_radian_mode(x, CONFIGURATION.radian_mode).cos()), 1));
+        m.insert("tan",   Function::token_from_fn("tan".into(),   arity_1!(|x| is_radian_mode(x, CONFIGURATION.radian_mode).tan()), 1));
+        m.insert("csc",   Function::token_from_fn("csc".into(),   arity_1!(|x| is_radian_mode(x, CONFIGURATION.radian_mode).sin().recip()), 1));
+        m.insert("sec",   Function::token_from_fn("sec".into(),   arity_1!(|x| is_radian_mode(x, CONFIGURATION.radian_mode).cos().recip()), 1));
+        m.insert("cot",   Function::token_from_fn("cot".into(),   arity_1!(|x| is_radian_mode(x, CONFIGURATION.radian_mode).tan().recip()), 1));
+        m.insert("sinh",  Function::token_from_fn("sinh".into(),  arity_1!(|x| x.sinh()), 1));
+        m.insert("cosh",  Function::token_from_fn("cosh".into(),  arity_1!(|x| x.cosh()), 1));
+        m.insert("tanh",  Function::token_from_fn("tanh".into(),  arity_1!(|x| x.tanh()), 1));
+        m.insert("ln",    Function::token_from_fn("ln".into(),    arity_1!(|x| x.ln()), 1));
+        m.insert("log",   Function::token_from_fn("log".into(),   arity_2!(|x, y| x.log(y)), 2));
+        m.insert("log10", Function::token_from_fn("log10".into(), arity_1!(|x| x.log10()), 1));
+        m.insert("sqrt",  Function::token_from_fn("sqrt".into(),  arity_1!(|x| x.sqrt()), 1));
+        m.insert("ceil",  Function::token_from_fn("ceil".into(),  arity_1!(|x| x.ceil()), 1));
+        m.insert("floor", Function::token_from_fn("floor".into(), arity_1!(|x| x.floor()), 1));
+        m.insert("rad",   Function::token_from_fn("rad".into(),   arity_1!(|x| x.to_radians()), 1));
+        m.insert("deg",   Function::token_from_fn("deg".into(),   arity_1!(|x| x.to_degrees()), 1));
+        m.insert("abs",   Function::token_from_fn("abs".into(),   arity_1!(|x| x.abs()), 1));
+        m.insert("asin",  Function::token_from_fn("asin".into(),  arity_1!(|x| x.asin()), 1));
+        m.insert("acos",  Function::token_from_fn("acos".into(),  arity_1!(|x| x.acos()), 1));
+        m.insert("atan",  Function::token_from_fn("atan".into(),  arity_1!(|x| x.atan()), 1));
+        m.insert("acsc",  Function::token_from_fn("acsc".into(),  arity_1!(|x| (1./x).asin()), 1));
+        m.insert("asec",  Function::token_from_fn("asec".into(),  arity_1!(|x| (1./x).acos()), 1));
+        m.insert("acot",  Function::token_from_fn("acot".into(),  arity_1!(|x| (1./x).atan()), 1));
+        m.insert("exp",   Function::token_from_fn("exp".into(),   arity_1!(|x| x.exp()), 1));
+        m.insert("exp2",  Function::token_from_fn("exp2".into(),  arity_1!(|x| x.exp2()), 1));
+        m.insert("round", Function::token_from_fn("round".into(), arity_1!(|x| x.round()), 1));
+        m.insert("nroot", Function::token_from_fn("nroot".into(), arity_2!(|x, y| x.powf(1./y)), 2));
         // single arg function s can be added here
         m
     };
@@ -138,7 +165,7 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
                 if !char_vec.is_empty() {
                     if FUNCTIONS.get(&char_vec[..]).is_some() {
                         char_vec.push(letter);
-                        if !FUNCTIONS.get(&char_vec[..]).is_some() {
+                        if !FUNCTIONS.get(&char_vec[..]).is_some() && !FUNCTIONS.keys().collect::<Vec<_>>().iter().any(|x| x.starts_with(&char_vec)) {
                             return Err(CalcError::Syntax(format!(
                                 "Function '{}' expected parentheses",
                                 &char_vec[..char_vec.chars().count()-1]
@@ -151,10 +178,13 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
                         num_vec.push(letter);
                         last_char_is_op = false;
                     } else {
-                        return Err(CalcError::Syntax(format!(
-                            "Unexpected character '{}'",
-                            char_vec
-                        )));
+                        char_vec.push(letter);
+                        if !FUNCTIONS.get(&char_vec[..]).is_some() {
+                            return Err(CalcError::Syntax(format!(
+                                "Unexpected character '{}'",
+                                char_vec
+                            )));
+                        }
                     }
                 } else {
                     num_vec.push(letter);
@@ -186,6 +216,10 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
                 }
                 last_char_is_op = false;
                 result.push(Token::Num(prev_ans.unwrap()));
+            }
+            ',' => {
+                drain_stack(&mut num_vec, &mut char_vec, &mut result);
+                result.push(Token::Comma);
             }
             'a'..='z' | 'A'..='Z' => {
                 let parse_num = num_vec.parse::<f64>().ok();

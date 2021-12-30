@@ -290,4 +290,107 @@ mod tests {
             eval_math_expression("e0", None).unwrap()
         );
     }
+    #[test]
+    fn eval_two_arg_fn() {
+        let evaled = eval_math_expression("nroot(27, 3)", None).unwrap();
+        assert_eq!(3., evaled);
+    }
+    #[test]
+    fn eval_log_n_base() {
+        let evaled = eval_math_expression("log(2^16, 4)", None).unwrap();
+        assert_eq!(8., evaled);
+    }
+    #[test]
+    fn eval_log_n_brackets() {
+        assert_eq!(
+            8.0000110068 as f64,
+            eval_math_expression("log(1+(2^16),4)", None).unwrap()
+        );
+    }
+    #[test]
+    fn eval_mismatched_parens_in_multiarg_fn() {
+        assert!(
+            match eval_math_expression("log(1+(2^16, 4)", None) {
+                Err(CalcError::Syntax(_)) => true,
+                _ => false,
+            }
+        );
+    }
+    #[test]
+    fn eval_comma_without_multiarg_fn() {
+        assert!(
+            match eval_math_expression("1+(2^16, 4)", None) {
+                Err(CalcError::Syntax(_)) => true,
+                _ => false,
+            }
+        )
+    }
+    #[test]
+    fn eval_unexpected_comma() {
+        assert!(
+            match eval_math_expression("(1+1,2+2)", None) {
+                Err(CalcError::Parser(y)) => {
+                    assert_eq!("Too many operators, Too little operands", y);
+                    true
+                },
+                _ => false,
+            }
+        )
+    }
+    #[test]
+    fn eval_nroot_expr_on_both_sides() {
+        assert_eq!(
+            1.1294396449 as f64,
+            eval_math_expression("nroot(2+2,4+e^2)", None).unwrap()
+        );
+    }
+    #[test]
+    fn eval_comma_left_paren_mixup() {
+        assert!(
+            match eval_math_expression("exp 2,3)", None) {
+                Err(CalcError::Syntax(y)) => {
+                    assert_eq!("Mismatched parentheses!", y);
+                    true
+                },
+                _ => false,
+            }
+        );
+        assert!(
+            match eval_math_expression("exp,2,3)", None) {
+                Err(CalcError::Syntax(y)) => {
+                    assert_eq!("Mismatched parentheses!", y);
+                    true
+                },
+                _ => false,
+            }
+        );
+    }
+    #[test]
+    fn eval_log10() {
+        assert_eq!(
+            3 as f64,
+            eval_math_expression("log10(1000)", None).unwrap()
+        );
+    }
+    #[test]
+    fn eval_mismatched_args() {
+        assert!(
+            match eval_math_expression("nroot(23,3,4)", None) {
+                Err(CalcError::Parser(y)) => {
+                    assert_eq!("Too many operators, Too little operands", y);
+                    true
+                },
+                _ => false,
+            }
+        );
+        assert!(
+            match eval_math_expression("nroot(23)", None) {
+                Err(CalcError::Parser(y)) => {
+                    assert_eq!("Too few arguments (1) for function nroot (requires 2)!", y);
+                    true
+                },
+                _ => false,
+            }
+        );
+    }
 }

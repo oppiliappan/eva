@@ -19,7 +19,7 @@ pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
             Token::Operator(current_op) => {
                 while let Some(top_op) = op_stack.last() {
                     match top_op {
-                        Token::LParen => {
+                        Token::LParen | Token::Comma => {
                             break;
                         }
                         Token::Operator(x) => {
@@ -44,17 +44,16 @@ pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
             Token::LParen => {
                 op_stack.push(token);
             }
-            Token::RParen => {
-                let mut push_until_paren: bool = false;
-                while let Some(token) = op_stack.pop() {
-                    if token == Token::LParen {
-                        push_until_paren = true;
-                        break;
-                    }
-                    postfixed.push(token)
+            Token::Comma => {
+                match walk_until_comma_or_lparen(&mut op_stack, &mut postfixed, token) {
+                    Err(x) => return Err(x),
+                    Ok(_) => {}
                 }
-                if !push_until_paren {
-                    return Err(CalcError::Syntax("Mismatched parentheses!".into()));
+            }
+            Token::RParen => {
+                match walk_until_comma_or_lparen(&mut op_stack, &mut postfixed, token) {
+                    Err(x) => return Err(x),
+                    Ok(_) => {}
                 }
             }
         }
@@ -63,6 +62,33 @@ pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
         postfixed.push(op);
     }
     Ok(postfixed)
+}
+
+fn walk_until_comma_or_lparen(
+    op_stack: &mut Vec<Token>,
+    postfixed: &mut Vec<Token>,
+    token: Token
+) -> Result<(), CalcError> {
+    let mut push_until_paren: bool = false;
+    while let Some(token) = op_stack.pop() {
+        if op_stack.last().map_or(true, |x| matches!(x, Token::Function(_)))
+                && token == Token::Comma
+                || token == Token::LParen {
+            push_until_paren = true;
+            break;
+        }
+        postfixed.push(token)
+    }
+
+    if matches!(token, Token::Comma) {
+        op_stack.push(token);
+    }
+
+    if !push_until_paren {
+        Err(CalcError::Syntax("Mismatched parentheses!".into()))
+    } else {
+        Ok(())
+    }
 }
 
 pub fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, CalcError> {
@@ -88,9 +114,24 @@ pub fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, CalcError> {
                 }
             }
             Token::Function(funct) => {
-                if let Some(arg) = num_stack.pop() {
-                    num_stack.push(funct.apply(arg)?)
+                let arity = funct.arity;
+                let mut argc = 0;
+                let mut func_args = vec![];
+                while argc < arity {
+                    if let Some(arg) = num_stack.pop() {
+                        func_args.push(arg);
+                        argc += 1;
+                    } else {
+                        return Err(CalcError::Parser(format!(
+                            "Too few arguments ({}) for function {} (requires {})!",
+                            argc,
+                            funct.token,
+                            arity
+                        )));
+                    }
                 }
+                func_args.reverse();
+                num_stack.push(funct.apply(func_args)?);
             }
             _ => unreachable!("wut"),
         }
