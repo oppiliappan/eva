@@ -59,6 +59,22 @@ impl Highlighter for LineHighlighter {
                 let mut coloured: String = ops.replace_all(line, "\x1b[35m$o\x1b[0m").into();
 
                 for c in constants {
+                    // This regex consists of the following pieces:
+                    // * the constant (`o`) to highlight (to be substituted as `{}` via `format!`),
+                    //   e.g. `e`  or `pi`.
+                    // * (optionally) an ANSI escape-code (`\x1b\[35m`) that is used to highlight
+                    //   a binary operator (e.g. `+`/`-`/...). With this one it is ensured that
+                    //   binary operators are always correctly detected after a constant
+                    //   (see the next bullet-point for why that's needed).
+                    // * the following operator (e.g. `+`/`-`/...), a space or the end
+                    //   of the expression (to highlight e.g. `1+e` correctly). This is
+                    //   required to distinguish a constant in an expression from a function-call,
+                    //   e.g. `e+1` from `exp(1)`, without this matching logic, the `e` from
+                    //   `exp` would be improperly interpreted as constant.
+                    //
+                    // To make sure none of existing highlighting (i.e. highlighting
+                    // of binary operators that happens before) breaks, the escape-codes & operator
+                    // (called `r`) are appended after the highlighted constant.
                     let re = Regex::new(format!("(?P<o>{})(?P<r>(\x1b\\[35m)?([\\+-/\\*%\\^! ]|$))", c).as_str()).unwrap();
                     coloured = re.replace_all(&coloured, "\x1b[33m$o\x1b[0m$r").into();
                 }
