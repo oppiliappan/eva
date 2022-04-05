@@ -78,12 +78,12 @@ pub fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, CalcError> {
                         num_stack.push(op.operate(n1, n2)?);
                     } else {
                         return Err(CalcError::Parser(
-                            "Too many operators, Too little operands".to_string(),
+                            "Too many operators, too few operands".to_string(),
                         ));
                     }
                 } else {
                     return Err(CalcError::Parser(
-                        "Too many operators, Too little operands".to_string(),
+                        "Too many operators, too few operands".to_string(),
                     ));
                 }
             }
@@ -99,7 +99,7 @@ pub fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, CalcError> {
         Ok(num_stack.pop().unwrap())
     } else {
         Err(CalcError::Parser(
-            "Too many operators, Too little operands".to_string(),
+            "Too many operators, too few operands".to_string(),
         ))
     }
 }
