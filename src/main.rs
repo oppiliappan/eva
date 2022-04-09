@@ -271,10 +271,7 @@ mod tests {
     }
     #[test]
     fn eval_exp2() {
-        assert_eq!(
-            256.,
-            eval_math_expression("exp2(8)", None).unwrap()
-        );
+        assert_eq!(256., eval_math_expression("exp2(8)", None).unwrap());
     }
     #[test]
     fn eval_exp() {
@@ -285,9 +282,6 @@ mod tests {
     }
     #[test]
     fn eval_e_times_n() {
-        assert_eq!(
-            0. as f64,
-            eval_math_expression("e0", None).unwrap()
-        );
+        assert_eq!(0. as f64, eval_math_expression("e0", None).unwrap());
     }
 }
