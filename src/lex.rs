@@ -36,7 +36,7 @@ impl Operator {
         } else if (self.token == '!' && x < 0.0) || (self.token == '!' && x.fract() != 0.0) {
             return Err(CalcError::Math(Math::OutOfBounds));
         } else if self.token == '!' && x == 0.0 {
-            // Must return 1 manually as 0..0 which the factorial function does doesn't work AFAIK.
+            // Must return 1 manually as 0..=n where n is 0.0 doesn't work AFAIK.
             return Ok(1.0);
         }
         let result = (self.operation)(x, y);
