@@ -33,10 +33,12 @@ impl Operator {
     pub fn operate(self, x: f64, y: f64) -> Result<f64, CalcError> {
         if self.token == '/' && y == 0. {
             return Err(CalcError::Math(Math::DivideByZero));
-        } else if (self.token == '!' && x <= 0.0) || (self.token == '!' && x.fract() != 0.0) {
+        } else if (self.token == '!' && x < 0.0) || (self.token == '!' && x.fract() != 0.0) {
             return Err(CalcError::Math(Math::OutOfBounds));
+        } else if self.token == '!' && x == 0.0 {
+            // Must return 1 manually as 0..0 which the factorial function does doesn't work AFAIK.
+            return Ok(1.0);
         }
-
         let result = (self.operation)(x, y);
         if !result.is_finite() {
             Err(CalcError::Math(Math::TooLarge))
