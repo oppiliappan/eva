@@ -77,41 +77,20 @@ pub static CONSTANTS: Lazy<HashMap<&str, Token>> = Lazy::new(|| {
 
 pub static FUNCTIONS: Lazy<HashMap<&str, Token>> = Lazy::new(|| {
     let mut m = HashMap::new();
-    m.insert(
-        "sin",
-        Function::token_from_fn("sin", |x| {
-            is_radian_mode(x, CONFIGURATION.radian_mode).sin()
-        }),
-    );
-    m.insert(
-        "cos",
-        Function::token_from_fn("cos", |x| {
-            is_radian_mode(x, CONFIGURATION.radian_mode).cos()
-        }),
-    );
-    m.insert(
-        "tan",
-        Function::token_from_fn("tan", |x| {
-            is_radian_mode(x, CONFIGURATION.radian_mode).tan()
-        }),
-    );
+    m.insert("sin", Function::token_from_fn("sin", |x| rad(x).sin()));
+    m.insert("cos", Function::token_from_fn("cos", |x| rad(x).cos()));
+    m.insert("tan", Function::token_from_fn("tan", |x| rad(x).tan()));
     m.insert(
         "csc",
-        Function::token_from_fn("csc", |x| {
-            is_radian_mode(x, CONFIGURATION.radian_mode).sin().recip()
-        }),
+        Function::token_from_fn("csc", |x| rad(x).sin().recip()),
     );
     m.insert(
         "sec",
-        Function::token_from_fn("sec", |x| {
-            is_radian_mode(x, CONFIGURATION.radian_mode).cos().recip()
-        }),
+        Function::token_from_fn("sec", |x| rad(x).cos().recip()),
     );
     m.insert(
         "cot",
-        Function::token_from_fn("cot", |x| {
-            is_radian_mode(x, CONFIGURATION.radian_mode).tan().recip()
-        }),
+        Function::token_from_fn("cot", |x| rad(x).tan().recip()),
     );
     m.insert("sinh", Function::token_from_fn("sinh", |x| x.sinh()));
     m.insert("cosh", Function::token_from_fn("cosh", |x| x.cosh()));
@@ -320,8 +299,9 @@ fn drain_stack(num_vec: &mut String, char_vec: &mut String, result: &mut Vec<Tok
     }
 }
 
-fn is_radian_mode(x: f64, is_radian: bool) -> f64 {
-    if is_radian {
+/// Convert to radian if radian_mode is enabled.
+fn rad(x: f64) -> f64 {
+    if CONFIGURATION.radian_mode {
         x
     } else {
         x.to_radians()
