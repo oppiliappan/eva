@@ -2,7 +2,7 @@
  * Refer to LICENCE for more information.
  * */
 
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
 use crate::error::{CalcError, Math};
@@ -68,58 +68,113 @@ pub enum Token {
     RParen,
 }
 
-lazy_static! {
-    pub static ref CONSTANTS: HashMap<&'static str, Token> = {
-        let mut m = HashMap::new();
-        m.insert("e",  Token::Num(std::f64::consts::E));
-        m.insert("pi", Token::Num(std::f64::consts::PI));
-        m
-    };
+pub static CONSTANTS: Lazy<HashMap<&'static str, Token>> = Lazy::new(|| {
+    let mut m = HashMap::new();
+    m.insert("e", Token::Num(std::f64::consts::E));
+    m.insert("pi", Token::Num(std::f64::consts::PI));
+    m
+});
 
-    pub static ref FUNCTIONS: HashMap<&'static str, Token> = {
-        let mut m = HashMap::new();
-        m.insert("sin",   Function::token_from_fn("sin".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin()));
-        m.insert("cos",   Function::token_from_fn("cos".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos()));
-        m.insert("tan",   Function::token_from_fn("tan".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).tan()));
-        m.insert("csc",   Function::token_from_fn("csc".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).sin().recip()));
-        m.insert("sec",   Function::token_from_fn("sec".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).cos().recip()));
-        m.insert("cot",   Function::token_from_fn("cot".into(),   |x| is_radian_mode(x, CONFIGURATION.radian_mode).tan().recip()));
-        m.insert("sinh",  Function::token_from_fn("sinh".into(),  |x| x.sinh()));
-        m.insert("cosh",  Function::token_from_fn("cosh".into(),  |x| x.cosh()));
-        m.insert("tanh",  Function::token_from_fn("tanh".into(),  |x| x.tanh()));
-        m.insert("ln",    Function::token_from_fn("ln".into(),    |x| x.ln()));
-        m.insert("log",   Function::token_from_fn("log".into(),   |x| x.log10()));
-        m.insert("sqrt",  Function::token_from_fn("sqrt".into(),  |x| x.sqrt()));
-        m.insert("ceil",  Function::token_from_fn("ceil".into(),  |x| x.ceil()));
-        m.insert("floor", Function::token_from_fn("floor".into(), |x| x.floor()));
-        m.insert("rad",   Function::token_from_fn("rad".into(),   |x| x.to_radians()));
-        m.insert("deg",   Function::token_from_fn("deg".into(),   |x| x.to_degrees()));
-        m.insert("abs",   Function::token_from_fn("abs".into(),   |x| x.abs()));
-        m.insert("asin",  Function::token_from_fn("asin".into(),  |x| x.asin()));
-        m.insert("acos",  Function::token_from_fn("acos".into(),  |x| x.acos()));
-        m.insert("atan",  Function::token_from_fn("atan".into(),  |x| x.atan()));
-        m.insert("acsc",  Function::token_from_fn("acsc".into(),  |x| (1./x).asin()));
-        m.insert("asec",  Function::token_from_fn("asec".into(),  |x| (1./x).acos()));
-        m.insert("acot",  Function::token_from_fn("acot".into(),  |x| (1./x).atan()));
-        m.insert("exp",   Function::token_from_fn("exp".into(),   |x| x.exp()));
-        m.insert("exp2",  Function::token_from_fn("exp2".into(),  |x| x.exp2()));
-        m.insert("round", Function::token_from_fn("round".into(), |x| x.round()));
-        // single arg function s can be added here
-        m
-    };
+pub static FUNCTIONS: Lazy<HashMap<&'static str, Token>> = Lazy::new(|| {
+    let mut m = HashMap::new();
+    m.insert(
+        "sin",
+        Function::token_from_fn("sin".into(), |x| {
+            is_radian_mode(x, CONFIGURATION.radian_mode).sin()
+        }),
+    );
+    m.insert(
+        "cos",
+        Function::token_from_fn("cos".into(), |x| {
+            is_radian_mode(x, CONFIGURATION.radian_mode).cos()
+        }),
+    );
+    m.insert(
+        "tan",
+        Function::token_from_fn("tan".into(), |x| {
+            is_radian_mode(x, CONFIGURATION.radian_mode).tan()
+        }),
+    );
+    m.insert(
+        "csc",
+        Function::token_from_fn("csc".into(), |x| {
+            is_radian_mode(x, CONFIGURATION.radian_mode).sin().recip()
+        }),
+    );
+    m.insert(
+        "sec",
+        Function::token_from_fn("sec".into(), |x| {
+            is_radian_mode(x, CONFIGURATION.radian_mode).cos().recip()
+        }),
+    );
+    m.insert(
+        "cot",
+        Function::token_from_fn("cot".into(), |x| {
+            is_radian_mode(x, CONFIGURATION.radian_mode).tan().recip()
+        }),
+    );
+    m.insert("sinh", Function::token_from_fn("sinh".into(), |x| x.sinh()));
+    m.insert("cosh", Function::token_from_fn("cosh".into(), |x| x.cosh()));
+    m.insert("tanh", Function::token_from_fn("tanh".into(), |x| x.tanh()));
+    m.insert("ln", Function::token_from_fn("ln".into(), |x| x.ln()));
+    m.insert("log", Function::token_from_fn("log".into(), |x| x.log10()));
+    m.insert("sqrt", Function::token_from_fn("sqrt".into(), |x| x.sqrt()));
+    m.insert("ceil", Function::token_from_fn("ceil".into(), |x| x.ceil()));
+    m.insert(
+        "floor",
+        Function::token_from_fn("floor".into(), |x| x.floor()),
+    );
+    m.insert(
+        "rad",
+        Function::token_from_fn("rad".into(), |x| x.to_radians()),
+    );
+    m.insert(
+        "deg",
+        Function::token_from_fn("deg".into(), |x| x.to_degrees()),
+    );
+    m.insert("abs", Function::token_from_fn("abs".into(), |x| x.abs()));
+    m.insert("asin", Function::token_from_fn("asin".into(), |x| x.asin()));
+    m.insert("acos", Function::token_from_fn("acos".into(), |x| x.acos()));
+    m.insert("atan", Function::token_from_fn("atan".into(), |x| x.atan()));
+    m.insert(
+        "acsc",
+        Function::token_from_fn("acsc".into(), |x| (1. / x).asin()),
+    );
+    m.insert(
+        "asec",
+        Function::token_from_fn("asec".into(), |x| (1. / x).acos()),
+    );
+    m.insert(
+        "acot",
+        Function::token_from_fn("acot".into(), |x| (1. / x).atan()),
+    );
+    m.insert("exp", Function::token_from_fn("exp".into(), |x| x.exp()));
+    m.insert("exp2", Function::token_from_fn("exp2".into(), |x| x.exp2()));
+    m.insert(
+        "round",
+        Function::token_from_fn("round".into(), |x| x.round()),
+    );
+    // single arg function s can be added here
+    m
+});
 
-    pub static ref OPERATORS: HashMap<char, Token> = {
-        let mut m = HashMap::new();
-        m.insert('+', Operator::token_from_op('+', |x, y| x + y, 2, true));
-        m.insert('-', Operator::token_from_op('-', |x, y| x - y, 2, true));
-        m.insert('*', Operator::token_from_op('*', |x, y| x * y, 3, true));
-        m.insert('/', Operator::token_from_op('/', |x, y| x / y, 3, true));
-        m.insert('%', Operator::token_from_op('%', |x, y| x % y, 3, true));
-        m.insert('^', Operator::token_from_op('^', |x, y| x.powf(y) , 4, false));
-        m.insert('!', Operator::token_from_op('!', |x, _| factorial(x) , 4, true));
-        m
-    };
-}
+pub static OPERATORS: Lazy<HashMap<char, Token>> = Lazy::new(|| {
+    let mut m = HashMap::new();
+    m.insert('+', Operator::token_from_op('+', |x, y| x + y, 2, true));
+    m.insert('-', Operator::token_from_op('-', |x, y| x - y, 2, true));
+    m.insert('*', Operator::token_from_op('*', |x, y| x * y, 3, true));
+    m.insert('/', Operator::token_from_op('/', |x, y| x / y, 3, true));
+    m.insert('%', Operator::token_from_op('%', |x, y| x % y, 3, true));
+    m.insert(
+        '^',
+        Operator::token_from_op('^', |x, y| x.powf(y), 4, false),
+    );
+    m.insert(
+        '!',
+        Operator::token_from_op('!', |x, _| factorial(x), 4, true),
+    );
+    m
+});
 
 fn factorial(n: f64) -> f64 {
     n.signum() * (1..=n.abs() as u64).fold(1, |p, n| p * n) as f64
