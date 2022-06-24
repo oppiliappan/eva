@@ -41,12 +41,12 @@ impl Operator {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Function {
-    token: String,
+    token: &'static str,
     relation: fn(f64) -> f64,
 }
 
 impl Function {
-    fn token_from_fn(token: String, relation: fn(f64) -> f64) -> Token {
+    fn token_from_fn(token: &'static str, relation: fn(f64) -> f64) -> Token {
         Token::Function(Function { token, relation })
     }
     pub fn apply(self, arg: f64) -> Result<f64, CalcError> {
@@ -79,81 +79,60 @@ pub static FUNCTIONS: Lazy<HashMap<&str, Token>> = Lazy::new(|| {
     let mut m = HashMap::new();
     m.insert(
         "sin",
-        Function::token_from_fn("sin".into(), |x| {
+        Function::token_from_fn("sin", |x| {
             is_radian_mode(x, CONFIGURATION.radian_mode).sin()
         }),
     );
     m.insert(
         "cos",
-        Function::token_from_fn("cos".into(), |x| {
+        Function::token_from_fn("cos", |x| {
             is_radian_mode(x, CONFIGURATION.radian_mode).cos()
         }),
     );
     m.insert(
         "tan",
-        Function::token_from_fn("tan".into(), |x| {
+        Function::token_from_fn("tan", |x| {
             is_radian_mode(x, CONFIGURATION.radian_mode).tan()
         }),
     );
     m.insert(
         "csc",
-        Function::token_from_fn("csc".into(), |x| {
+        Function::token_from_fn("csc", |x| {
             is_radian_mode(x, CONFIGURATION.radian_mode).sin().recip()
         }),
     );
     m.insert(
         "sec",
-        Function::token_from_fn("sec".into(), |x| {
+        Function::token_from_fn("sec", |x| {
             is_radian_mode(x, CONFIGURATION.radian_mode).cos().recip()
         }),
     );
     m.insert(
         "cot",
-        Function::token_from_fn("cot".into(), |x| {
+        Function::token_from_fn("cot", |x| {
             is_radian_mode(x, CONFIGURATION.radian_mode).tan().recip()
         }),
     );
-    m.insert("sinh", Function::token_from_fn("sinh".into(), |x| x.sinh()));
-    m.insert("cosh", Function::token_from_fn("cosh".into(), |x| x.cosh()));
-    m.insert("tanh", Function::token_from_fn("tanh".into(), |x| x.tanh()));
-    m.insert("ln", Function::token_from_fn("ln".into(), |x| x.ln()));
-    m.insert("log", Function::token_from_fn("log".into(), |x| x.log10()));
-    m.insert("sqrt", Function::token_from_fn("sqrt".into(), |x| x.sqrt()));
-    m.insert("ceil", Function::token_from_fn("ceil".into(), |x| x.ceil()));
-    m.insert(
-        "floor",
-        Function::token_from_fn("floor".into(), |x| x.floor()),
-    );
-    m.insert(
-        "rad",
-        Function::token_from_fn("rad".into(), |x| x.to_radians()),
-    );
-    m.insert(
-        "deg",
-        Function::token_from_fn("deg".into(), |x| x.to_degrees()),
-    );
-    m.insert("abs", Function::token_from_fn("abs".into(), |x| x.abs()));
-    m.insert("asin", Function::token_from_fn("asin".into(), |x| x.asin()));
-    m.insert("acos", Function::token_from_fn("acos".into(), |x| x.acos()));
-    m.insert("atan", Function::token_from_fn("atan".into(), |x| x.atan()));
-    m.insert(
-        "acsc",
-        Function::token_from_fn("acsc".into(), |x| (1. / x).asin()),
-    );
-    m.insert(
-        "asec",
-        Function::token_from_fn("asec".into(), |x| (1. / x).acos()),
-    );
-    m.insert(
-        "acot",
-        Function::token_from_fn("acot".into(), |x| (1. / x).atan()),
-    );
-    m.insert("exp", Function::token_from_fn("exp".into(), |x| x.exp()));
-    m.insert("exp2", Function::token_from_fn("exp2".into(), |x| x.exp2()));
-    m.insert(
-        "round",
-        Function::token_from_fn("round".into(), |x| x.round()),
-    );
+    m.insert("sinh", Function::token_from_fn("sinh", |x| x.sinh()));
+    m.insert("cosh", Function::token_from_fn("cosh", |x| x.cosh()));
+    m.insert("tanh", Function::token_from_fn("tanh", |x| x.tanh()));
+    m.insert("ln", Function::token_from_fn("ln", |x| x.ln()));
+    m.insert("log", Function::token_from_fn("log", |x| x.log10()));
+    m.insert("sqrt", Function::token_from_fn("sqrt", |x| x.sqrt()));
+    m.insert("ceil", Function::token_from_fn("ceil", |x| x.ceil()));
+    m.insert("floor", Function::token_from_fn("floor", |x| x.floor()));
+    m.insert("rad", Function::token_from_fn("rad", |x| x.to_radians()));
+    m.insert("deg", Function::token_from_fn("deg", |x| x.to_degrees()));
+    m.insert("abs", Function::token_from_fn("abs", |x| x.abs()));
+    m.insert("asin", Function::token_from_fn("asin", |x| x.asin()));
+    m.insert("acos", Function::token_from_fn("acos", |x| x.acos()));
+    m.insert("atan", Function::token_from_fn("atan", |x| x.atan()));
+    m.insert("acsc", Function::token_from_fn("acsc", |x| (1. / x).asin()));
+    m.insert("asec", Function::token_from_fn("asec", |x| (1. / x).acos()));
+    m.insert("acot", Function::token_from_fn("acot", |x| (1. / x).atan()));
+    m.insert("exp", Function::token_from_fn("exp", |x| x.exp()));
+    m.insert("exp2", Function::token_from_fn("exp2", |x| x.exp2()));
+    m.insert("round", Function::token_from_fn("round", |x| x.round()));
     // single arg function s can be added here
     m
 });
