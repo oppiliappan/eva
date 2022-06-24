@@ -6,8 +6,8 @@ use rustyline::config::{Builder, ColorMode, CompletionType, EditMode};
 use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
 use rustyline::hint::{Hinter, HistoryHinter};
-use rustyline::{Context, Editor, Helper};
 use rustyline::validate::Validator;
+use rustyline::{Context, Editor, Helper};
 
 use directories::ProjectDirs;
 
@@ -75,7 +75,10 @@ impl Highlighter for LineHighlighter {
                     // To make sure none of existing highlighting (i.e. highlighting
                     // of binary operators that happens before) breaks, the escape-codes & operator
                     // (called `r`) are appended after the highlighted constant.
-                    let re = Regex::new(format!("(?P<o>{})(?P<r>(\x1b\\[35m)?([\\+-/\\*%\\^! ]|$))", c).as_str()).unwrap();
+                    let re = Regex::new(
+                        format!("(?P<o>{})(?P<r>(\x1b\\[35m)?([\\+-/\\*%\\^! ]|$))", c).as_str(),
+                    )
+                    .unwrap();
                     coloured = re.replace_all(&coloured, "\x1b[33m$o\x1b[0m$r").into();
                 }
                 for f in functions {
@@ -91,7 +94,9 @@ impl Highlighter for LineHighlighter {
 }
 
 impl Highlighter for RLHelper {
-    fn highlight_char(&self, _: &str, _: usize) -> bool { true }
+    fn highlight_char(&self, _: &str, _: usize) -> bool {
+        true
+    }
     fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
         self.highlighter.highlight_hint(hint)
     }

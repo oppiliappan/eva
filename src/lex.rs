@@ -141,7 +141,7 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
                         if !FUNCTIONS.get(&char_vec[..]).is_some() {
                             return Err(CalcError::Syntax(format!(
                                 "Function '{}' expected parentheses",
-                                &char_vec[..char_vec.chars().count()-1]
+                                &char_vec[..char_vec.chars().count() - 1]
                             )));
                         }
                     } else if CONSTANTS.get(&char_vec[..]).is_some() {

@@ -153,7 +153,7 @@ fn parse_arguments() -> Configuration {
         .global_setting(AppSettings::ColoredHelp)
         .arg(
             Arg::with_name("fix")
-                .short("f")
+                .short('f')
                 .long("fix")
                 .takes_value(true)
                 .value_name("FIX")
@@ -161,7 +161,7 @@ fn parse_arguments() -> Configuration {
         )
         .arg(
             Arg::with_name("base")
-                .short("b")
+                .short('b')
                 .long("base")
                 .takes_value(true)
                 .value_name("RADIX")
@@ -174,7 +174,7 @@ fn parse_arguments() -> Configuration {
         )
         .arg(
             Arg::with_name("radian")
-                .short("r")
+                .short('r')
                 .long("radian")
                 .help("set eva to radian mode"),
         )
@@ -271,10 +271,7 @@ mod tests {
     }
     #[test]
     fn eval_exp2() {
-        assert_eq!(
-            256.,
-            eval_math_expression("exp2(8)", None).unwrap()
-        );
+        assert_eq!(256., eval_math_expression("exp2(8)", None).unwrap());
     }
     #[test]
     fn eval_exp() {
@@ -285,9 +282,6 @@ mod tests {
     }
     #[test]
     fn eval_e_times_n() {
-        assert_eq!(
-            0. as f64,
-            eval_math_expression("e0", None).unwrap()
-        );
+        assert_eq!(0. as f64, eval_math_expression("e0", None).unwrap());
     }
 }
