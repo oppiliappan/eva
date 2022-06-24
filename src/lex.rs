@@ -68,14 +68,14 @@ pub enum Token {
     RParen,
 }
 
-pub static CONSTANTS: Lazy<HashMap<&'static str, Token>> = Lazy::new(|| {
+pub static CONSTANTS: Lazy<HashMap<&str, Token>> = Lazy::new(|| {
     let mut m = HashMap::new();
     m.insert("e", Token::Num(std::f64::consts::E));
     m.insert("pi", Token::Num(std::f64::consts::PI));
     m
 });
 
-pub static FUNCTIONS: Lazy<HashMap<&'static str, Token>> = Lazy::new(|| {
+pub static FUNCTIONS: Lazy<HashMap<&str, Token>> = Lazy::new(|| {
     let mut m = HashMap::new();
     m.insert(
         "sin",
@@ -177,7 +177,7 @@ pub static OPERATORS: Lazy<HashMap<char, Token>> = Lazy::new(|| {
 });
 
 fn factorial(n: f64) -> f64 {
-    n.signum() * (1..=n.abs() as u64).fold(1, |p, n| p * n) as f64
+    n.signum() * (1..=n.abs() as u64).product::<u64>() as f64
 }
 
 pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError> {
@@ -193,7 +193,7 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
                 if !char_vec.is_empty() {
                     if FUNCTIONS.get(&char_vec[..]).is_some() {
                         char_vec.push(letter);
-                        if !FUNCTIONS.get(&char_vec[..]).is_some() {
+                        if FUNCTIONS.get(&char_vec[..]).is_none() {
                             return Err(CalcError::Syntax(format!(
                                 "Function '{}' expected parentheses",
                                 &char_vec[..char_vec.chars().count() - 1]

@@ -73,10 +73,10 @@ fn main() {
         let mut history_path = PathBuf::from(eva_data_dir);
         let mut previous_ans_path = PathBuf::from(eva_cache_dir);
 
-        if let Err(_) = create_dir_all(eva_data_dir) {
+        if create_dir_all(eva_data_dir).is_err() {
             history_path = PathBuf::from(UserDirs::new().unwrap().home_dir());
         }
-        if let Err(_) = create_dir_all(eva_cache_dir) {
+        if create_dir_all(eva_cache_dir).is_err() {
             previous_ans_path = PathBuf::from(UserDirs::new().unwrap().home_dir());
         }
         history_path.push("history.txt");
@@ -189,7 +189,7 @@ pub fn parse_arguments() -> Configuration {
 }
 
 pub fn eval_math_expression(input: &str, prev_ans: Option<f64>) -> Result<f64, CalcError> {
-    let input = input.trim().replace(" ", "");
+    let input = input.trim().replace(' ', "");
     if input == "help" {
         return Err(CalcError::Help);
     }
