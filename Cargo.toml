@@ -13,7 +13,7 @@ license = "MIT"
 
 [dependencies]
 rustyline   = { version = "9.1.2", default-features = false }
-clap        = "3.2.6"
+clap        = { version = "3.2.6", features = ["cargo"] }
 radix_fmt   = "1.0.0"
 directories = "4.0.1"
 regex       = "1.5.6"

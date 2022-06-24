@@ -22,7 +22,8 @@ use crate::parse::*;
 use crate::readline::*;
 
 // extern crates
-use clap::{App, AppSettings, Arg};
+use clap::builder::RangedU64ValueParser;
+use clap::{Arg, ArgAction, Command};
 use directories::{ProjectDirs, UserDirs};
 use once_cell::sync::Lazy;
 use rustyline::error::ReadlineError;
@@ -141,50 +142,48 @@ fn main() {
     }
 }
 
-pub fn parse_arguments() -> Configuration {
-    let config = App::new(env!("CARGO_PKG_NAME"))
-        .version(env!("CARGO_PKG_VERSION"))
-        .author(env!("CARGO_PKG_AUTHORS"))
-        .about(env!("CARGO_PKG_DESCRIPTION"))
-        .global_setting(AppSettings::ColoredHelp)
+fn cmd() -> Command<'static> {
+    clap::command!()
         .arg(
-            Arg::with_name("fix")
+            Arg::new("input")
+                .value_name("INPUT")
+                .help("Optional expression string to run eva in command mode"),
+        )
+        .arg(
+            Arg::new("fix")
                 .short('f')
                 .long("fix")
-                .takes_value(true)
+                .value_parser(RangedU64ValueParser::<usize>::new().range(1..=64))
+                .default_value("10")
                 .value_name("FIX")
-                .help("set number of decimal places in the output"),
+                .help("Number of decimal places in output (1 - 64)"),
         )
         .arg(
-            Arg::with_name("base")
+            Arg::new("base")
                 .short('b')
                 .long("base")
-                .takes_value(true)
+                .value_parser(RangedU64ValueParser::<usize>::new().range(1..=36))
+                .default_value("10")
                 .value_name("RADIX")
-                .help("set the radix of calculation output (1 - 36)"),
+                .help("Radix of calculation output (1 - 36)"),
         )
         .arg(
-            Arg::with_name("INPUT")
-                .help("optional expression string to run eva in command mode")
-                .index(1),
-        )
-        .arg(
-            Arg::with_name("radian")
+            Arg::new("radian")
                 .short('r')
                 .long("radian")
-                .help("set eva to radian mode"),
+                .action(ArgAction::SetTrue)
+                .help("Use radian mode"),
         )
-        .get_matches();
+}
 
-    let mut input = String::new();
-    if let Some(i) = config.value_of("INPUT") {
-        input.push_str(i);
-    };
+pub fn parse_arguments() -> Configuration {
+    let matches = cmd().get_matches();
+
     Configuration {
-        radian_mode: config.is_present("radian"),
-        fix: config.value_of("fix").unwrap_or("10").parse().unwrap(),
-        base: config.value_of("base").unwrap_or("10").parse().unwrap(),
-        input,
+        radian_mode: *matches.get_one("radian").unwrap(),
+        fix: *matches.get_one("fix").unwrap(),
+        base: *matches.get_one("base").unwrap(),
+        input: matches.get_one("input").cloned().unwrap_or_default(),
     }
 }
 
@@ -210,6 +209,10 @@ pub fn eval_math_expression(input: &str, prev_ans: Option<f64>) -> Result<f64, C
 mod tests {
     use super::*;
 
+    #[test]
+    fn verify_app() {
+        cmd().debug_assert();
+    }
     #[test]
     fn basic_ops() {
         let evaled = eval_math_expression("6*2 + 3 + 12 -3", Some(0f64)).unwrap();

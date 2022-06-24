@@ -2,7 +2,7 @@ extern crate num;
 use num::{BigInt, FromPrimitive, ToPrimitive};
 use std::cmp::Ordering;
 
-use crate::error::{CalcError, Math};
+use crate::error::CalcError;
 use crate::CONFIGURATION;
 
 pub fn autobalance_parens(input: &str) -> Result<String, CalcError> {
@@ -29,10 +29,6 @@ pub fn autobalance_parens(input: &str) -> Result<String, CalcError> {
 }
 
 fn radix_fmt(number: f64, obase: usize) -> Result<String, CalcError> {
-    if obase > 36 {
-        return Err(CalcError::Math(Math::UnknownBase));
-    }
-
     match (number.is_infinite(), number.is_sign_positive()) {
         (true, true) => return Ok("inf".to_string()),
         (true, false) => return Ok("-inf".to_string()),
