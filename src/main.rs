@@ -283,4 +283,9 @@ mod tests {
         let evaled = eval_math_expression("e0", None).unwrap();
         assert_eq!(0. as f64, evaled);
     }
+    #[test]
+    fn eval_factorial_large() {
+        let evaled = eval_math_expression("21!", None).unwrap();
+        assert_eq!(51_090_942_171_709_440_000.0, evaled);
+    }
 }

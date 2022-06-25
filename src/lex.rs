@@ -134,7 +134,7 @@ pub static OPERATORS: Lazy<HashMap<char, Token>> = Lazy::new(|| {
 });
 
 fn factorial(n: f64) -> f64 {
-    n.signum() * (1..=n.abs() as u64).product::<u64>() as f64
+    n.signum() * (1..=n.abs() as u128).product::<u128>() as f64
 }
 
 pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError> {
