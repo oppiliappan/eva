@@ -22,14 +22,15 @@ use crate::parse::*;
 use crate::readline::*;
 
 // extern crates
-use clap::{App, AppSettings, Arg};
+use clap::builder::RangedU64ValueParser;
+use clap::{Arg, ArgAction, Command};
 use directories::{ProjectDirs, UserDirs};
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use rustyline::error::ReadlineError;
 
 /* end of imports */
 
-struct Configuration {
+pub struct Configuration {
     radian_mode: bool,
     fix: usize,
     base: usize,
@@ -37,19 +38,15 @@ struct Configuration {
 }
 
 #[cfg(not(test))]
-lazy_static! {
-    static ref CONFIGURATION: Configuration = parse_arguments();
-}
+static CONFIGURATION: Lazy<Configuration> = Lazy::new(parse_arguments);
 
 #[cfg(test)]
-lazy_static! {
-    static ref CONFIGURATION: Configuration = Configuration {
-        radian_mode: false,
-        fix: 10,
-        base: 10,
-        input: "".to_string(),
-    };
-}
+static CONFIGURATION: Lazy<Configuration> = Lazy::new(|| Configuration {
+    radian_mode: false,
+    fix: 10,
+    base: 10,
+    input: "".to_string(),
+});
 
 fn main() {
     if !CONFIGURATION.input.is_empty() {
@@ -77,10 +74,10 @@ fn main() {
         let mut history_path = PathBuf::from(eva_data_dir);
         let mut previous_ans_path = PathBuf::from(eva_cache_dir);
 
-        if let Err(_) = create_dir_all(eva_data_dir) {
+        if create_dir_all(eva_data_dir).is_err() {
             history_path = PathBuf::from(UserDirs::new().unwrap().home_dir());
         }
-        if let Err(_) = create_dir_all(eva_cache_dir) {
+        if create_dir_all(eva_cache_dir).is_err() {
             previous_ans_path = PathBuf::from(UserDirs::new().unwrap().home_dir());
         }
         history_path.push("history.txt");
@@ -145,55 +142,53 @@ fn main() {
     }
 }
 
-fn parse_arguments() -> Configuration {
-    let config = App::new(env!("CARGO_PKG_NAME"))
-        .version(env!("CARGO_PKG_VERSION"))
-        .author(env!("CARGO_PKG_AUTHORS"))
-        .about(env!("CARGO_PKG_DESCRIPTION"))
-        .global_setting(AppSettings::ColoredHelp)
+fn cmd() -> Command<'static> {
+    clap::command!()
         .arg(
-            Arg::with_name("fix")
-                .short("f")
+            Arg::new("input")
+                .value_name("INPUT")
+                .help("Optional expression string to run eva in command mode"),
+        )
+        .arg(
+            Arg::new("fix")
+                .short('f')
                 .long("fix")
-                .takes_value(true)
+                .value_parser(RangedU64ValueParser::<usize>::new().range(1..=64))
+                .default_value("10")
                 .value_name("FIX")
-                .help("set number of decimal places in the output"),
+                .help("Number of decimal places in output (1 - 64)"),
         )
         .arg(
-            Arg::with_name("base")
-                .short("b")
+            Arg::new("base")
+                .short('b')
                 .long("base")
-                .takes_value(true)
+                .value_parser(RangedU64ValueParser::<usize>::new().range(1..=36))
+                .default_value("10")
                 .value_name("RADIX")
-                .help("set the radix of calculation output (1 - 36)"),
+                .help("Radix of calculation output (1 - 36)"),
         )
         .arg(
-            Arg::with_name("INPUT")
-                .help("optional expression string to run eva in command mode")
-                .index(1),
-        )
-        .arg(
-            Arg::with_name("radian")
-                .short("r")
+            Arg::new("radian")
+                .short('r')
                 .long("radian")
-                .help("set eva to radian mode"),
+                .action(ArgAction::SetTrue)
+                .help("Use radian mode"),
         )
-        .get_matches();
+}
 
-    let mut input = String::new();
-    if let Some(i) = config.value_of("INPUT") {
-        input.push_str(i);
-    };
+pub fn parse_arguments() -> Configuration {
+    let matches = cmd().get_matches();
+
     Configuration {
-        radian_mode: config.is_present("radian"),
-        fix: config.value_of("fix").unwrap_or("10").parse().unwrap(),
-        base: config.value_of("base").unwrap_or("10").parse().unwrap(),
-        input,
+        radian_mode: *matches.get_one("radian").unwrap(),
+        fix: *matches.get_one("fix").unwrap(),
+        base: *matches.get_one("base").unwrap(),
+        input: matches.get_one("input").cloned().unwrap_or_default(),
     }
 }
 
 pub fn eval_math_expression(input: &str, prev_ans: Option<f64>) -> Result<f64, CalcError> {
-    let input = input.trim().replace(" ", "");
+    let input = input.trim().replace(' ', "");
     if input == "help" {
         return Err(CalcError::Help);
     }
@@ -214,6 +209,10 @@ pub fn eval_math_expression(input: &str, prev_ans: Option<f64>) -> Result<f64, C
 mod tests {
     use super::*;
 
+    #[test]
+    fn verify_app() {
+        cmd().debug_assert();
+    }
     #[test]
     fn basic_ops() {
         let evaled = eval_math_expression("6*2 + 3 + 12 -3", Some(0f64)).unwrap();
@@ -271,17 +270,22 @@ mod tests {
     }
     #[test]
     fn eval_exp2() {
-        assert_eq!(256., eval_math_expression("exp2(8)", None).unwrap());
+        let evaled = eval_math_expression("exp2(8)", None).unwrap();
+        assert_eq!(256., evaled);
     }
     #[test]
     fn eval_exp() {
-        assert_eq!(
-            20.0855369232 as f64,
-            eval_math_expression("exp(3)", None).unwrap()
-        );
+        let evaled = eval_math_expression("exp(3)", None).unwrap();
+        assert_eq!(20.0855369232 as f64, evaled);
     }
     #[test]
     fn eval_e_times_n() {
-        assert_eq!(0. as f64, eval_math_expression("e0", None).unwrap());
+        let evaled = eval_math_expression("e0", None).unwrap();
+        assert_eq!(0. as f64, evaled);
+    }
+    #[test]
+    fn eval_factorial_large() {
+        let evaled = eval_math_expression("21!", None).unwrap();
+        assert_eq!(51_090_942_171_709_440_000.0, evaled);
     }
 }
