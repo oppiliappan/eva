@@ -27,14 +27,23 @@ impl Operator {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum Relation {
+    N1(fn(f64) -> f64),
+    N2(fn(f64, f64) -> f64),
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Function {
     token: &'static str,
-    relation: fn(f64) -> f64,
+    relation: Relation,
 }
 
 impl Function {
-    pub fn apply(self, arg: f64) -> Result<f64, CalcError> {
-        let result = (self.relation)(arg);
+    pub fn apply(self, args: &[f64]) -> Result<f64, CalcError> {
+        let result = match self.relation {
+            Relation::N1(func) => (func)(args[0]),
+            Relation::N2(func) => (func)(args[0], args[1]),
+        };
         if !result.is_finite() {
             Err(CalcError::Math(Math::OutOfBounds))
         } else {
@@ -76,37 +85,38 @@ pub static CONSTANTS: Lazy<HashMap<&str, Token>> = Lazy::new(|| {
 });
 
 pub static FUNCTIONS: Lazy<HashMap<&str, Token>> = Lazy::new(|| {
-    fn add_fn(map: &mut HashMap<&str, Token>, token: &'static str, relation: fn(f64) -> f64) {
+    fn add_fn1(map: &mut HashMap<&str, Token>, token: &'static str, relation: fn(f64) -> f64) {
+        let relation = Relation::N1(relation);
         let func = Token::Function(Function { token, relation });
         map.insert(token, func);
     }
     let mut m = HashMap::new();
-    add_fn(&mut m, "sin", |x| rad(x).sin());
-    add_fn(&mut m, "cos", |x| rad(x).cos());
-    add_fn(&mut m, "tan", |x| rad(x).tan());
-    add_fn(&mut m, "csc", |x| rad(x).sin().recip());
-    add_fn(&mut m, "sec", |x| rad(x).cos().recip());
-    add_fn(&mut m, "cot", |x| rad(x).tan().recip());
-    add_fn(&mut m, "sinh", |x| x.sinh());
-    add_fn(&mut m, "cosh", |x| x.cosh());
-    add_fn(&mut m, "tanh", |x| x.tanh());
-    add_fn(&mut m, "ln", |x| x.ln());
-    add_fn(&mut m, "log", |x| x.log10());
-    add_fn(&mut m, "sqrt", |x| x.sqrt());
-    add_fn(&mut m, "ceil", |x| x.ceil());
-    add_fn(&mut m, "floor", |x| x.floor());
-    add_fn(&mut m, "rad", |x| x.to_radians());
-    add_fn(&mut m, "deg", |x| x.to_degrees());
-    add_fn(&mut m, "abs", |x| x.abs());
-    add_fn(&mut m, "asin", |x| x.asin());
-    add_fn(&mut m, "acos", |x| x.acos());
-    add_fn(&mut m, "atan", |x| x.atan());
-    add_fn(&mut m, "acsc", |x| (1. / x).asin());
-    add_fn(&mut m, "asec", |x| (1. / x).acos());
-    add_fn(&mut m, "acot", |x| (1. / x).atan());
-    add_fn(&mut m, "exp", |x| x.exp());
-    add_fn(&mut m, "exp2", |x| x.exp2());
-    add_fn(&mut m, "round", |x| x.round());
+    add_fn1(&mut m, "sin", |x| rad(x).sin());
+    add_fn1(&mut m, "cos", |x| rad(x).cos());
+    add_fn1(&mut m, "tan", |x| rad(x).tan());
+    add_fn1(&mut m, "csc", |x| rad(x).sin().recip());
+    add_fn1(&mut m, "sec", |x| rad(x).cos().recip());
+    add_fn1(&mut m, "cot", |x| rad(x).tan().recip());
+    add_fn1(&mut m, "sinh", |x| x.sinh());
+    add_fn1(&mut m, "cosh", |x| x.cosh());
+    add_fn1(&mut m, "tanh", |x| x.tanh());
+    add_fn1(&mut m, "ln", |x| x.ln());
+    add_fn1(&mut m, "log", |x| x.log10());
+    add_fn1(&mut m, "sqrt", |x| x.sqrt());
+    add_fn1(&mut m, "ceil", |x| x.ceil());
+    add_fn1(&mut m, "floor", |x| x.floor());
+    add_fn1(&mut m, "rad", |x| x.to_radians());
+    add_fn1(&mut m, "deg", |x| x.to_degrees());
+    add_fn1(&mut m, "abs", |x| x.abs());
+    add_fn1(&mut m, "asin", |x| x.asin());
+    add_fn1(&mut m, "acos", |x| x.acos());
+    add_fn1(&mut m, "atan", |x| x.atan());
+    add_fn1(&mut m, "acsc", |x| (1. / x).asin());
+    add_fn1(&mut m, "asec", |x| (1. / x).acos());
+    add_fn1(&mut m, "acot", |x| (1. / x).atan());
+    add_fn1(&mut m, "exp", |x| x.exp());
+    add_fn1(&mut m, "exp2", |x| x.exp2());
+    add_fn1(&mut m, "round", |x| x.round());
     // single arg function s can be added here
     m
 });

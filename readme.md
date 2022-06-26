@@ -146,7 +146,7 @@ Domain Error: Out of bounds!
 
  - ~~add support for variables (pi, e, _ (previous answer))~~
  - ~~syntax highlighting~~
- - multiple arg functions
+ - ~~multiple arg functions~~
  - ~~screenshots~~
  - ~~create logo~~
  - ~~unary operators (minus, plus)~~

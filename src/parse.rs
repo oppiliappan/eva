@@ -87,9 +87,9 @@ pub fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, CalcError> {
                     ));
                 }
             }
-            Token::Function(funct) => {
+            Token::Function(func) => {
                 if let Some(arg) = num_stack.pop() {
-                    num_stack.push(funct.apply(arg)?)
+                    num_stack.push(func.apply(&[arg])?)
                 }
             }
             _ => unreachable!("wut"),
