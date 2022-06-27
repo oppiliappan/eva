@@ -6,7 +6,7 @@ use std::iter::ExactSizeIterator;
 
 use crate::lex;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum CalcError {
     Math(Math),
     Syntax(String),
@@ -14,7 +14,7 @@ pub enum CalcError {
     Help,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Math {
     DivideByZero,
     OutOfBounds,

@@ -8,7 +8,8 @@ use crate::lex::Token;
 pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
     let mut postfixed: Vec<Token> = vec![];
     let mut op_stack: Vec<Token> = vec![];
-    for token in tokens {
+    let mut tokens = tokens.into_iter().peekable();
+    while let Some(token) = tokens.next() {
         match token {
             Token::Num(_) => {
                 postfixed.push(token);
@@ -57,6 +58,11 @@ pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
                     return Err(CalcError::Syntax("Mismatched parentheses!".into()));
                 }
             }
+            Token::Comma => {
+                if tokens.peek() == Some(&Token::Comma) {
+                    return Err(CalcError::Syntax("Empty argument".into()));
+                }
+            }
         }
     }
     while let Some(op) = op_stack.pop() {
@@ -67,6 +73,7 @@ pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
 
 pub fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, CalcError> {
     let mut num_stack: Vec<f64> = vec![];
+    let mut args = vec![];
     for token in postfixed {
         match token {
             Token::Num(n) => {
@@ -88,9 +95,18 @@ pub fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, CalcError> {
                 }
             }
             Token::Function(func) => {
-                if let Some(arg) = num_stack.pop() {
-                    num_stack.push(func.apply(&[arg])?)
+                let arity = func.arity();
+                for _ in 0..arity {
+                    if let Some(arg) = num_stack.pop() {
+                        args.insert(0, arg);
+                    } else {
+                        return Err(CalcError::Parser(format!(
+                            "To few arguments for function, need {arity}"
+                        )));
+                    }
                 }
+                num_stack.push(func.apply(&args)?);
+                args.clear();
             }
             _ => unreachable!("wut"),
         }
