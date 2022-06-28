@@ -95,9 +95,13 @@ pi * 5^2  # πr²
 all trigonometric functions expect input in degrees.
 
 ```
+1 argument:
 sin    cos     tan    csc    sec    cot    sinh   cosh   tanh
-asin   acos    atan   acsc   asec   acot   ln     log    sqrt
+asin   acos    atan   acsc   asec   acot   ln     log10  sqrt
 ceil   floor   abs
+
+2 arguments:
+log    nroot
 
 deg(x) - convert x to degrees
 rad(x) - convert x to radians
@@ -107,8 +111,10 @@ examples:
 ```
 sqrt(sin(30)) # parentheses are mandatory for functions
 
-log100        # no
-log(100)      # yes
+log10100      # no
+log10(100)    # yes
+
+log(1, 10)    # function with two arguments
 ```
 
 ### quality of life features
