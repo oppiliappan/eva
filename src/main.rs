@@ -295,8 +295,8 @@ mod tests {
     }
     #[test]
     fn eval_log_n_base() {
-        let evaled = eval_math_expression("log(1+(2^16),4)", None);
-        assert_eq!(evaled, Ok(8.0000110068));
+        let evaled = eval_math_expression("log(2^16,4)", None);
+        assert_eq!(evaled, Ok(8.));
     }
     #[test]
     fn eval_log_n_brackets() {
