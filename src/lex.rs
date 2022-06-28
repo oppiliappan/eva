@@ -44,10 +44,10 @@ impl Function {
             Relation::N1(func) => (func)(args[0]),
             Relation::N2(func) => (func)(args[0], args[1]),
         };
-        if !result.is_finite() {
-            Err(CalcError::Math(Math::OutOfBounds))
-        } else {
+        if result.is_finite() {
             Ok(result)
+        } else {
+            Err(CalcError::Math(Math::OutOfBounds))
         }
     }
     pub fn arity(&self) -> usize {
