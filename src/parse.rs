@@ -8,7 +8,8 @@ use crate::lex::Token;
 pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
     let mut postfixed: Vec<Token> = vec![];
     let mut op_stack: Vec<Token> = vec![];
-    for token in tokens {
+    let mut tokens = tokens.into_iter().peekable();
+    while let Some(token) = tokens.next() {
         match token {
             Token::Num(_) => {
                 postfixed.push(token);
@@ -19,7 +20,7 @@ pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
             Token::Operator(current_op) => {
                 while let Some(top_op) = op_stack.last() {
                     match top_op {
-                        Token::LParen => {
+                        Token::LParen | Token::Comma => {
                             break;
                         }
                         Token::Operator(x) => {
@@ -44,17 +45,26 @@ pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
             Token::LParen => {
                 op_stack.push(token);
             }
-            Token::RParen => {
+            Token::RParen | Token::Comma => {
                 let mut push_until_paren: bool = false;
                 while let Some(token) = op_stack.pop() {
-                    if token == Token::LParen {
+                    if matches!(op_stack.last(), Some(Token::Function(_)) | None)
+                        && token == Token::Comma
+                        || token == Token::LParen
+                    {
                         push_until_paren = true;
                         break;
                     }
-                    postfixed.push(token)
+                    postfixed.push(token);
                 }
                 if !push_until_paren {
                     return Err(CalcError::Syntax("Mismatched parentheses!".into()));
+                }
+                if token == Token::Comma {
+                    if tokens.peek() == Some(&Token::Comma) {
+                        return Err(CalcError::Syntax("Empty argument".into()));
+                    }
+                    op_stack.push(token);
                 }
             }
         }
@@ -62,11 +72,13 @@ pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
     while let Some(op) = op_stack.pop() {
         postfixed.push(op);
     }
+    // println!("{:?}", postfixed);
     Ok(postfixed)
 }
 
 pub fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, CalcError> {
     let mut num_stack: Vec<f64> = vec![];
+    let mut args = vec![];
     for token in postfixed {
         match token {
             Token::Num(n) => {
@@ -87,10 +99,19 @@ pub fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, CalcError> {
                     ));
                 }
             }
-            Token::Function(funct) => {
-                if let Some(arg) = num_stack.pop() {
-                    num_stack.push(funct.apply(arg)?)
+            Token::Function(func) => {
+                let arity = func.arity();
+                for _ in 0..arity {
+                    if let Some(arg) = num_stack.pop() {
+                        args.insert(0, arg);
+                    } else {
+                        return Err(CalcError::Parser(format!(
+                            "To few arguments for function, need {arity}"
+                        )));
+                    }
                 }
+                num_stack.push(func.apply(&args)?);
+                args.clear();
             }
             _ => unreachable!("wut"),
         }

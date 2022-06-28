@@ -215,77 +215,163 @@ mod tests {
     }
     #[test]
     fn basic_ops() {
-        let evaled = eval_math_expression("6*2 + 3 + 12 -3", Some(0f64)).unwrap();
-        assert_eq!(24., evaled);
+        let evaled = eval_math_expression("6*2 + 3 + 12 -3", Some(0f64));
+        assert_eq!(evaled, Ok(24.));
     }
     #[test]
     fn trignometric_fns() {
-        let evaled = eval_math_expression("sin(30) + tan(45", Some(0f64)).unwrap();
-        assert_eq!(1.5, evaled);
+        let evaled = eval_math_expression("sin(30) + tan(45", Some(0f64));
+        assert_eq!(evaled, Ok(1.5));
     }
     #[test]
     fn brackets() {
-        let evaled = eval_math_expression("(((1 + 2 + 3) ^ 2 ) - 4)", Some(0f64)).unwrap();
-        assert_eq!(32., evaled);
+        let evaled = eval_math_expression("(((1 + 2 + 3) ^ 2 ) - 4)", Some(0f64));
+        assert_eq!(evaled, Ok(32.));
     }
     #[test]
     fn exponentiation() {
-        let evaled = eval_math_expression("2 ** 2 ** 3", None).unwrap();
-        assert_eq!(256., evaled); // 2^(2^3), not (2^2)^3
+        let evaled = eval_math_expression("2 ** 2 ** 3", None);
+        assert_eq!(evaled, Ok(256.)); // 2^(2^3), not (2^2)^3
     }
     #[test]
     fn floating_ops() {
-        let evaled = eval_math_expression("1.2816 + 1 + 1.2816/1.2", Some(0f64)).unwrap();
-        assert_eq!(3.3496, evaled);
+        let evaled = eval_math_expression("1.2816 + 1 + 1.2816/1.2", Some(0f64));
+        assert_eq!(evaled, Ok(3.3496));
     }
     #[test]
     fn inverse_trignometric_fns() {
-        let evaled = eval_math_expression("deg(asin(1) + acos(1))", Some(0f64)).unwrap();
-        assert_eq!(90., evaled);
+        let evaled = eval_math_expression("deg(asin(1) + acos(1))", Some(0f64));
+        assert_eq!(evaled, Ok(90.));
     }
     #[test]
     fn sigmoid_fns() {
-        let evaled = eval_math_expression("1 / (1 + e^-7)", Some(0f64)).unwrap();
-        assert_eq!(0.9990889488, evaled);
+        let evaled = eval_math_expression("1 / (1 + e^-7)", Some(0f64));
+        assert_eq!(evaled, Ok(0.9990889488));
     }
     #[test]
     fn prev_ans() {
-        let evaled = eval_math_expression("_ + 9", Some(9f64)).unwrap();
-        assert_eq!(18.0, evaled);
+        let evaled = eval_math_expression("_ + 9", Some(9f64));
+        assert_eq!(evaled, Ok(18.0));
     }
     #[test]
     fn eval_with_zero_prev() {
-        let evaled = eval_math_expression("9 + _ ", Some(0f64)).unwrap();
-        assert_eq!(9., evaled);
+        let evaled = eval_math_expression("9 + _ ", Some(0f64));
+        assert_eq!(evaled, Ok(9.));
     }
     #[test]
     fn eval_const_multiplication() {
-        let evaled = eval_math_expression("e2", None).unwrap();
-        assert_eq!(5.4365636569, evaled);
+        let evaled = eval_math_expression("e2", None);
+        assert_eq!(evaled, Ok(5.4365636569));
     }
     #[test]
     fn eval_round() {
-        let evaled = eval_math_expression("round(0.5)+round(2.4)", None).unwrap();
-        assert_eq!(3., evaled);
+        let evaled = eval_math_expression("round(0.5)+round(2.4)", None);
+        assert_eq!(evaled, Ok(3.));
     }
     #[test]
     fn eval_exp2() {
-        let evaled = eval_math_expression("exp2(8)", None).unwrap();
-        assert_eq!(256., evaled);
+        let evaled = eval_math_expression("exp2(8)", None);
+        assert_eq!(evaled, Ok(256.));
     }
     #[test]
     fn eval_exp() {
-        let evaled = eval_math_expression("exp(3)", None).unwrap();
-        assert_eq!(20.0855369232 as f64, evaled);
+        let evaled = eval_math_expression("exp(3)", None);
+        assert_eq!(evaled, Ok(20.0855369232));
     }
     #[test]
     fn eval_e_times_n() {
-        let evaled = eval_math_expression("e0", None).unwrap();
-        assert_eq!(0. as f64, evaled);
+        let evaled = eval_math_expression("e0", None);
+        assert_eq!(evaled, Ok(0.));
     }
     #[test]
     fn eval_factorial_large() {
-        let evaled = eval_math_expression("21!", None).unwrap();
-        assert_eq!(51_090_942_171_709_440_000.0, evaled);
+        let evaled = eval_math_expression("21!", None);
+        assert_eq!(evaled, Ok(51_090_942_171_709_440_000.0));
+    }
+    #[test]
+    fn eval_nroot() {
+        let evaled = eval_math_expression("nroot(27, 3)", None);
+        assert_eq!(evaled, Ok(3.));
+    }
+    #[test]
+    fn eval_log_n_base() {
+        let evaled = eval_math_expression("log(2^16,4)", None);
+        assert_eq!(evaled, Ok(8.));
+    }
+    #[test]
+    fn eval_log_n_brackets() {
+        let evaled = eval_math_expression("log(1+(2^16),4)", None);
+        assert_eq!(evaled, Ok(8.0000110068));
+    }
+    #[test]
+    fn eval_mismatched_parens_in_multiarg_fn() {
+        let evaled = eval_math_expression("log(1+(2^16, 4)", None);
+        assert_eq!(
+            evaled,
+            Err(CalcError::Syntax("Mismatched parentheses!".to_string()))
+        );
+    }
+    #[test]
+    fn eval_comma_without_multiarg_fn() {
+        let evaled = eval_math_expression("1+(2^16, 4)", None);
+        assert_eq!(
+            evaled,
+            Err(CalcError::Syntax("Mismatched parentheses!".to_string()))
+        );
+    }
+    #[test]
+    fn eval_unexpected_comma() {
+        let evaled = eval_math_expression("(1+1,2+2)", None);
+        assert_eq!(
+            evaled,
+            Err(CalcError::Parser(
+                "Too many operators, too few operands".to_string()
+            ))
+        );
+    }
+    #[test]
+    fn eval_nroot_expr_on_both_sides() {
+        let evaled = eval_math_expression("nroot(2+2,4+e^2)", None);
+        assert_eq!(evaled, Ok(1.1294396449));
+    }
+    #[test]
+    fn eval_comma_left_paren_mixup() {
+        let evaled = eval_math_expression("exp 2,3)", None);
+        assert_eq!(
+            evaled,
+            Err(CalcError::Syntax("Mismatched parentheses!".to_string()))
+        );
+        let evaled = eval_math_expression("exp,2,3)", None);
+        assert_eq!(
+            evaled,
+            Err(CalcError::Syntax("Mismatched parentheses!".to_string()))
+        );
+    }
+    #[test]
+    fn eval_log10() {
+        let evaled = eval_math_expression("log10(1000)", None);
+        assert_eq!(evaled, Ok(3.));
+    }
+    #[test]
+    fn eval_empty_argument() {
+        let evaled = eval_math_expression("log(2,,3)", None);
+        assert_eq!(evaled, Err(CalcError::Syntax("Empty argument".to_string())));
+    }
+    #[test]
+    fn eval_mismatched_args() {
+        let evaled = eval_math_expression("nroot(23,3,4)", None);
+        assert_eq!(
+            evaled,
+            Err(CalcError::Parser(
+                "Too many operators, too few operands".to_string()
+            ))
+        );
+        let evaled = eval_math_expression("nroot(23)", None);
+        assert_eq!(
+            evaled,
+            Err(CalcError::Parser(
+                "To few arguments for function, need 2".to_string()
+            ))
+        );
     }
 }
