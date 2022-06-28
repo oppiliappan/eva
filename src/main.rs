@@ -299,6 +299,55 @@ mod tests {
         assert_eq!(evaled, Ok(8.0000110068));
     }
     #[test]
+    fn eval_log_n_brackets() {
+        let evaled = eval_math_expression("log(1+(2^16),4)", None);
+        assert_eq!(evaled, Ok(8.0000110068));
+    }
+    #[test]
+    fn eval_mismatched_parens_in_multiarg_fn() {
+        let evaled = eval_math_expression("log(1+(2^16, 4)", None);
+        assert_eq!(
+            evaled,
+            Err(CalcError::Syntax("Mismatched parentheses!".to_string()))
+        );
+    }
+    #[test]
+    fn eval_comma_without_multiarg_fn() {
+        let evaled = eval_math_expression("1+(2^16, 4)", None);
+        assert_eq!(
+            evaled,
+            Err(CalcError::Syntax("Mismatched parentheses!".to_string()))
+        );
+    }
+    #[test]
+    fn eval_unexpected_comma() {
+        let evaled = eval_math_expression("(1+1,2+2)", None);
+        assert_eq!(
+            evaled,
+            Err(CalcError::Parser(
+                "Too many operators, too few operands".to_string()
+            ))
+        );
+    }
+    #[test]
+    fn eval_nroot_expr_on_both_sides() {
+        let evaled = eval_math_expression("nroot(2+2,4+e^2)", None);
+        assert_eq!(evaled, Ok(1.1294396449));
+    }
+    #[test]
+    fn eval_comma_left_paren_mixup() {
+        let evaled = eval_math_expression("exp 2,3)", None);
+        assert_eq!(
+            evaled,
+            Err(CalcError::Syntax("Mismatched parentheses!".to_string()))
+        );
+        let evaled = eval_math_expression("exp,2,3)", None);
+        assert_eq!(
+            evaled,
+            Err(CalcError::Syntax("Mismatched parentheses!".to_string()))
+        );
+    }
+    #[test]
     fn eval_log10() {
         let evaled = eval_math_expression("log10(1000)", None);
         assert_eq!(evaled, Ok(3.));
@@ -307,5 +356,22 @@ mod tests {
     fn eval_empty_argument() {
         let evaled = eval_math_expression("log(2,,3)", None);
         assert_eq!(evaled, Err(CalcError::Syntax("Empty argument".to_string())));
+    }
+    #[test]
+    fn eval_mismatched_args() {
+        let evaled = eval_math_expression("nroot(23,3,4)", None);
+        assert_eq!(
+            evaled,
+            Err(CalcError::Parser(
+                "Too many operators, too few operands".to_string()
+            ))
+        );
+        let evaled = eval_math_expression("nroot(23)", None);
+        assert_eq!(
+            evaled,
+            Err(CalcError::Parser(
+                "To few arguments for function, need 2".to_string()
+            ))
+        );
     }
 }

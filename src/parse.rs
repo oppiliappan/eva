@@ -20,7 +20,7 @@ pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
             Token::Operator(current_op) => {
                 while let Some(top_op) = op_stack.last() {
                     match top_op {
-                        Token::LParen => {
+                        Token::LParen | Token::Comma => {
                             break;
                         }
                         Token::Operator(x) => {
@@ -45,22 +45,26 @@ pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
             Token::LParen => {
                 op_stack.push(token);
             }
-            Token::RParen => {
+            Token::RParen | Token::Comma => {
                 let mut push_until_paren: bool = false;
                 while let Some(token) = op_stack.pop() {
-                    if token == Token::LParen {
+                    if matches!(op_stack.last(), Some(Token::Function(_)) | None)
+                        && token == Token::Comma
+                        || token == Token::LParen
+                    {
                         push_until_paren = true;
                         break;
                     }
-                    postfixed.push(token)
+                    postfixed.push(token);
                 }
                 if !push_until_paren {
                     return Err(CalcError::Syntax("Mismatched parentheses!".into()));
                 }
-            }
-            Token::Comma => {
-                if tokens.peek() == Some(&Token::Comma) {
-                    return Err(CalcError::Syntax("Empty argument".into()));
+                if token == Token::Comma {
+                    if tokens.peek() == Some(&Token::Comma) {
+                        return Err(CalcError::Syntax("Empty argument".into()));
+                    }
+                    op_stack.push(token);
                 }
             }
         }
@@ -68,6 +72,7 @@ pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
     while let Some(op) = op_stack.pop() {
         postfixed.push(op);
     }
+    // println!("{:?}", postfixed);
     Ok(postfixed)
 }
 
