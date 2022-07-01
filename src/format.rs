@@ -1,4 +1,3 @@
-extern crate num;
 use num::{BigInt, FromPrimitive, ToPrimitive};
 use std::cmp::Ordering;
 
