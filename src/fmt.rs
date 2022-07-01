@@ -40,7 +40,7 @@ fn thousand_sep(mut s: String) -> String {
 
 pub fn pprint(mut ans: f64) {
     if ans.is_infinite() {
-        println!("{}{}", if ans.is_sign_positive() { "" } else { "-" }, "inf");
+        println!("{}inf", if ans.is_sign_positive() { "" } else { "-" });
     } else if ans.is_nan() {
         println!("nan");
     } else if CONFIGURATION.base == 10 {
