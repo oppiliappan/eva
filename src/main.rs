@@ -5,18 +5,16 @@
 
 /* imports */
 // std
-use std::f64;
 use std::fs::create_dir_all;
 use std::path::PathBuf;
 
 // modules
 mod error;
-mod format;
+mod fmt;
 mod lex;
 mod parse;
 mod readline;
 use crate::error::{handler, CalcError};
-use crate::format::*;
 use crate::lex::*;
 use crate::parse::*;
 use crate::readline::*;
@@ -53,7 +51,7 @@ fn main() {
         // command mode //
         let evaled = eval_math_expression(&CONFIGURATION.input[..], Some(0.));
         match evaled {
-            Ok(ans) => pprint(ans),
+            Ok(ans) => fmt::pprint(ans),
             Err(e) => {
                 eprintln!("{}", handler(e));
                 std::process::exit(1);
@@ -105,7 +103,7 @@ fn main() {
                             use std::fs::OpenOptions;
                             use std::io::Write;
                             prev_ans = Some(ans);
-                            pprint(ans);
+                            fmt::pprint(ans);
                             match OpenOptions::new()
                                 .write(true)
                                 .create(true)
@@ -195,7 +193,7 @@ pub fn eval_math_expression(input: &str, prev_ans: Option<f64>) -> Result<f64, C
     if input.is_empty() {
         return Ok(0.);
     }
-    let input = format::autobalance_parens(&input[..])?;
+    let input = fmt::autobalance_parens(&input[..])?;
     let lexed = lexer(&input[..], prev_ans)?;
     let postfixed = to_postfix(lexed)?;
     let evaled = eval_postfix(postfixed)?;
