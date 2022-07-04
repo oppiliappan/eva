@@ -1,0 +1,37 @@
+name: Test
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      matrix:
+        config:
+        - name: ubuntu-build
+          os: ubuntu-latest
+        - name: macos-build
+          os: macos-latest
+        - name: windows-build
+          os: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+    - uses: actions-rs/cargo@v1
+      with:
+        command: build --release
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          target/release/eva
+          target/release/eva.exe
