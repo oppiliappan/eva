@@ -3,37 +3,35 @@ name: Test
 on:
   push:
     tags:
-      - v*
+    - v*
 
 jobs:
-  build:
-    name: ${{ matrix.config.name }}
+  dist:
     runs-on: ${{ matrix.config.os }}
     strategy:
+      fail-fast: false
       matrix:
         config:
-        - name: ubuntu-build
-          os: ubuntu-latest
-        - name: macos-build
-          os: macos-latest
-        - name: windows-build
-          os: windows-latest
+        - os: ubuntu-latest
+          target: x86_64-unknown-linux-gnu
+        # - os: macos-latest
+        #   target: x86_64-apple-darwin
+        - os: windows-latest
+          target: x86_64-pc-windows-msvc
     steps:
     - uses: actions/checkout@v3
     - uses: actions-rs/toolchain@v1
       with:
+        profile: minimal
         toolchain: stable
     - uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --release
-  release:
-    runs-on: ubuntu-latest
-    needs: [build]
-    steps:
+        args: --release --locked --target ${{ matrix.target }}
+    - name: Strip release binary (linux and macos)
+      if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+      run: strip "target/${{ matrix.target }}/release/eva"
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: |
-          target/release/eva
-          target/release/eva.exe
+        files: target/${{ matrix.target }}/release/eva*
