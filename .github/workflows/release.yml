@@ -25,10 +25,10 @@ jobs:
         toolchain: stable
     - uses: actions-rs/cargo@v1
       with:
-        command: build
-        args: --release
+        command: build --release
   release:
     runs-on: ubuntu-latest
+    needs: [build]
     steps:
     - name: Release
       uses: softprops/action-gh-release@v1
