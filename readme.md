@@ -28,24 +28,22 @@ $ cargo run
 ### usage
 
 ```shell
-eva 0.2.4
+eva 0.3.0
 NerdyPepper <akshayoppiliappan@gmail.com>
 Calculator REPL similar to bc(1)
 
 USAGE:
-    eva [FLAGS] [OPTIONS] [INPUT]
-
-FLAGS:
-    -h, --help       Prints help information
-    -r, --radian     set eva to radian mode
-    -V, --version    Prints version information
-
-OPTIONS:
-    -b, --base <RADIX>    set the radix of calculation output (2, 8, 10, 16 etc.)
-    -f, --fix <FIX>       set number of decimal places in the output
+    eva [OPTIONS] [INPUT]
 
 ARGS:
-    <INPUT>    optional expression string to run eva in command mode
+    <INPUT>    Optional expression string to run eva in command mode
+
+OPTIONS:
+    -b, --base <RADIX>    Radix of calculation output (1 - 36) [default: 10]
+    -f, --fix <FIX>       Number of decimal places in output (1 - 64) [default: 10]
+    -h, --help            Print help information
+    -r, --radian          Use radian mode
+    -V, --version         Print version information
 
 ```
 
