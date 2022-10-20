@@ -206,6 +206,7 @@ pub fn eval_math_expression(input: &str, prev_ans: Option<f64>) -> Result<f64, C
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::error::Math;
 
     pub fn eval(input: &str, prev_ans: Option<f64>) -> Result<f64, CalcError> {
         let ans = eval_math_expression(input, prev_ans)?;
