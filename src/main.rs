@@ -206,6 +206,7 @@ pub fn eval_math_expression(input: &str, prev_ans: Option<f64>) -> Result<f64, C
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::error::Math;
 
     pub fn eval(input: &str, prev_ans: Option<f64>) -> Result<f64, CalcError> {
         let ans = eval_math_expression(input, prev_ans)?;
@@ -376,5 +377,10 @@ mod tests {
                 "To few arguments for function, need 2".to_string()
             ))
         );
+    }
+    #[test]
+    fn eval_negative_factorial() {
+        let evaled = eval_math_expression("-1!", None);
+        assert_eq!(Err(CalcError::Math(Math::OutOfBounds)), evaled);
     }
 }

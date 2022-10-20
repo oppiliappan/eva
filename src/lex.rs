@@ -19,9 +19,18 @@ pub struct Operator {
 impl Operator {
     pub fn operate(self, x: f64, y: f64) -> Result<f64, CalcError> {
         if self.token == '/' && y == 0. {
-            Err(CalcError::Math(Math::DivideByZero))
+            return Err(CalcError::Math(Math::DivideByZero));
+        } else if (self.token == '!' && x < 0.0) || (self.token == '!' && x.fract() != 0.0) {
+            return Err(CalcError::Math(Math::OutOfBounds));
+        } else if self.token == '!' && x == 0.0 {
+            // Must return 1 manually as 0..=n where n is 0.0 doesn't work AFAIK.
+            return Ok(1.0);
+        }
+        let result = (self.operation)(x, y);
+        if !result.is_finite() {
+            Err(CalcError::Math(Math::TooLarge))
         } else {
-            Ok((self.operation)(x, y))
+            Ok(result)
         }
     }
 }
@@ -152,7 +161,11 @@ pub static OPERATORS: Lazy<HashMap<char, Token>> = Lazy::new(|| {
 });
 
 fn factorial(n: f64) -> f64 {
-    n.signum() * (1..=n.abs() as u128).product::<u128>() as f64
+    let answer = (1..=n.round() as u128).map(|u| u as f64).product::<f64>() as f64;
+    if answer == 0.0 {
+        return f64::INFINITY;
+    }
+    answer
 }
 
 pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError> {
