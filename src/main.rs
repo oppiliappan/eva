@@ -15,7 +15,7 @@ mod format;
 mod lex;
 mod parse;
 mod readline;
-use crate::error::{handler, CalcError};
+use crate::error::{handler, CalcError, Math};
 use crate::format::*;
 use crate::lex::*;
 use crate::parse::*;
@@ -287,5 +287,10 @@ mod tests {
     fn eval_factorial_large() {
         let evaled = eval_math_expression("21!", None).unwrap();
         assert_eq!(51_090_942_171_709_440_000.0, evaled);
+    }
+    #[test]
+    fn eval_negative_factorial() {
+        let evaled = eval_math_expression("-1!", None);
+        assert_eq!(Err(CalcError::Math(Math::OutOfBounds)), evaled);
     }
 }
