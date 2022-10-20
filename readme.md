@@ -28,24 +28,22 @@ $ cargo run
 ### usage
 
 ```shell
-eva 0.2.4
+eva 0.3.0
 NerdyPepper <akshayoppiliappan@gmail.com>
 Calculator REPL similar to bc(1)
 
 USAGE:
-    eva [FLAGS] [OPTIONS] [INPUT]
-
-FLAGS:
-    -h, --help       Prints help information
-    -r, --radian     set eva to radian mode
-    -V, --version    Prints version information
-
-OPTIONS:
-    -b, --base <RADIX>    set the radix of calculation output (2, 8, 10, 16 etc.)
-    -f, --fix <FIX>       set number of decimal places in the output
+    eva [OPTIONS] [INPUT]
 
 ARGS:
-    <INPUT>    optional expression string to run eva in command mode
+    <INPUT>    Optional expression string to run eva in command mode
+
+OPTIONS:
+    -b, --base <RADIX>    Radix of calculation output (1 - 36) [default: 10]
+    -f, --fix <FIX>       Number of decimal places in output (1 - 64) [default: 10]
+    -h, --help            Print help information
+    -r, --radian          Use radian mode
+    -V, --version         Print version information
 
 ```
 
@@ -95,9 +93,13 @@ pi * 5^2  # πr²
 all trigonometric functions expect input in degrees.
 
 ```
+1 argument:
 sin    cos     tan    csc    sec    cot    sinh   cosh   tanh
-asin   acos    atan   acsc   asec   acot   ln     log    sqrt
+asin   acos    atan   acsc   asec   acot   ln     log10  sqrt
 ceil   floor   abs
+
+2 arguments:
+log    nroot
 
 deg(x) - convert x to degrees
 rad(x) - convert x to radians
@@ -107,8 +109,10 @@ examples:
 ```
 sqrt(sin(30)) # parentheses are mandatory for functions
 
-log100        # no
-log(100)      # yes
+log10100      # no
+log10(100)    # yes
+
+log(1, 10)    # function with two arguments
 ```
 
 ### quality of life features
@@ -146,7 +150,7 @@ Domain Error: Out of bounds!
 
  - ~~add support for variables (pi, e, _ (previous answer))~~
  - ~~syntax highlighting~~
- - multiple arg functions
+ - ~~multiple arg functions~~
  - ~~screenshots~~
  - ~~create logo~~
  - ~~unary operators (minus, plus)~~

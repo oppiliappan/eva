@@ -36,18 +36,33 @@ impl Operator {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum Relation {
+    N1(fn(f64) -> f64),
+    N2(fn(f64, f64) -> f64),
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Function {
     token: &'static str,
-    relation: fn(f64) -> f64,
+    relation: Relation,
 }
 
 impl Function {
-    pub fn apply(self, arg: f64) -> Result<f64, CalcError> {
-        let result = (self.relation)(arg);
-        if !result.is_finite() {
-            Err(CalcError::Math(Math::OutOfBounds))
-        } else {
+    pub fn apply(self, args: &[f64]) -> Result<f64, CalcError> {
+        let result = match self.relation {
+            Relation::N1(func) => (func)(args[0]),
+            Relation::N2(func) => (func)(args[0], args[1]),
+        };
+        if result.is_finite() {
             Ok(result)
+        } else {
+            Err(CalcError::Math(Math::OutOfBounds))
+        }
+    }
+    pub fn arity(&self) -> usize {
+        match self.relation {
+            Relation::N1(_) => 1,
+            Relation::N2(_) => 2,
         }
     }
 }
@@ -59,6 +74,7 @@ pub enum Token {
     Function(Function),
     LParen,
     RParen,
+    Comma,
 }
 
 impl Token {
@@ -85,38 +101,40 @@ pub static CONSTANTS: Lazy<HashMap<&str, Token>> = Lazy::new(|| {
 });
 
 pub static FUNCTIONS: Lazy<HashMap<&str, Token>> = Lazy::new(|| {
-    fn add_fn(map: &mut HashMap<&str, Token>, token: &'static str, relation: fn(f64) -> f64) {
+    use Relation::*;
+    fn add_fn(map: &mut HashMap<&str, Token>, token: &'static str, relation: Relation) {
         let func = Token::Function(Function { token, relation });
         map.insert(token, func);
     }
     let mut m = HashMap::new();
-    add_fn(&mut m, "sin", |x| rad(x).sin());
-    add_fn(&mut m, "cos", |x| rad(x).cos());
-    add_fn(&mut m, "tan", |x| rad(x).tan());
-    add_fn(&mut m, "csc", |x| rad(x).sin().recip());
-    add_fn(&mut m, "sec", |x| rad(x).cos().recip());
-    add_fn(&mut m, "cot", |x| rad(x).tan().recip());
-    add_fn(&mut m, "sinh", |x| x.sinh());
-    add_fn(&mut m, "cosh", |x| x.cosh());
-    add_fn(&mut m, "tanh", |x| x.tanh());
-    add_fn(&mut m, "ln", |x| x.ln());
-    add_fn(&mut m, "log", |x| x.log10());
-    add_fn(&mut m, "sqrt", |x| x.sqrt());
-    add_fn(&mut m, "ceil", |x| x.ceil());
-    add_fn(&mut m, "floor", |x| x.floor());
-    add_fn(&mut m, "rad", |x| x.to_radians());
-    add_fn(&mut m, "deg", |x| x.to_degrees());
-    add_fn(&mut m, "abs", |x| x.abs());
-    add_fn(&mut m, "asin", |x| x.asin());
-    add_fn(&mut m, "acos", |x| x.acos());
-    add_fn(&mut m, "atan", |x| x.atan());
-    add_fn(&mut m, "acsc", |x| (1. / x).asin());
-    add_fn(&mut m, "asec", |x| (1. / x).acos());
-    add_fn(&mut m, "acot", |x| (1. / x).atan());
-    add_fn(&mut m, "exp", |x| x.exp());
-    add_fn(&mut m, "exp2", |x| x.exp2());
-    add_fn(&mut m, "round", |x| x.round());
-    // single arg function s can be added here
+    add_fn(&mut m, "sin", N1(|x| rad(x).sin()));
+    add_fn(&mut m, "cos", N1(|x| rad(x).cos()));
+    add_fn(&mut m, "tan", N1(|x| rad(x).tan()));
+    add_fn(&mut m, "csc", N1(|x| rad(x).sin().recip()));
+    add_fn(&mut m, "sec", N1(|x| rad(x).cos().recip()));
+    add_fn(&mut m, "cot", N1(|x| rad(x).tan().recip()));
+    add_fn(&mut m, "sinh", N1(|x| x.sinh()));
+    add_fn(&mut m, "cosh", N1(|x| x.cosh()));
+    add_fn(&mut m, "tanh", N1(|x| x.tanh()));
+    add_fn(&mut m, "ln", N1(|x| x.ln()));
+    add_fn(&mut m, "log10", N1(|x| x.log10()));
+    add_fn(&mut m, "sqrt", N1(|x| x.sqrt()));
+    add_fn(&mut m, "ceil", N1(|x| x.ceil()));
+    add_fn(&mut m, "floor", N1(|x| x.floor()));
+    add_fn(&mut m, "rad", N1(|x| x.to_radians()));
+    add_fn(&mut m, "deg", N1(|x| x.to_degrees()));
+    add_fn(&mut m, "abs", N1(|x| x.abs()));
+    add_fn(&mut m, "asin", N1(|x| x.asin()));
+    add_fn(&mut m, "acos", N1(|x| x.acos()));
+    add_fn(&mut m, "atan", N1(|x| x.atan()));
+    add_fn(&mut m, "acsc", N1(|x| (1. / x).asin()));
+    add_fn(&mut m, "asec", N1(|x| (1. / x).acos()));
+    add_fn(&mut m, "acot", N1(|x| (1. / x).atan()));
+    add_fn(&mut m, "exp", N1(|x| x.exp()));
+    add_fn(&mut m, "exp2", N1(|x| x.exp2()));
+    add_fn(&mut m, "round", N1(|x| x.round()));
+    add_fn(&mut m, "log", N2(|x, y| x.log(y)));
+    add_fn(&mut m, "nroot", N2(|x, y| x.powf(1. / y)));
     m
 });
 
@@ -163,7 +181,9 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
                 if !char_vec.is_empty() {
                     if FUNCTIONS.get(&char_vec[..]).is_some() {
                         char_vec.push(letter);
-                        if FUNCTIONS.get(&char_vec[..]).is_none() {
+                        if FUNCTIONS.get(&char_vec[..]).is_none()
+                            && !FUNCTIONS.keys().any(|k| k.starts_with(&char_vec))
+                        {
                             return Err(CalcError::Syntax(format!(
                                 "Function '{}' expected parentheses",
                                 &char_vec[..char_vec.chars().count() - 1]
@@ -176,10 +196,13 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
                         num_vec.push(letter);
                         last_char_is_op = false;
                     } else {
-                        return Err(CalcError::Syntax(format!(
-                            "Unexpected character '{}'",
-                            char_vec
-                        )));
+                        char_vec.push(letter);
+                        if FUNCTIONS.get(&char_vec[..]).is_none() {
+                            return Err(CalcError::Syntax(format!(
+                                "Unexpected character '{}'",
+                                char_vec
+                            )));
+                        }
                     }
                 } else {
                     num_vec.push(letter);
@@ -285,6 +308,10 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
                 }
                 result.push(Token::LParen);
                 last_char_is_op = true;
+            }
+            ',' => {
+                drain_stack(&mut num_vec, &mut char_vec, &mut result);
+                result.push(Token::Comma);
             }
             ')' => {
                 drain_stack(&mut num_vec, &mut char_vec, &mut result);

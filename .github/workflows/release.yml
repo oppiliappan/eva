@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    tags:
+    - v*
+
+jobs:
+  dist:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - os: ubuntu-latest
+          target: x86_64-unknown-linux-gnu
+        # - os: macos-latest
+        #   target: x86_64-apple-darwin
+        - os: windows-latest
+          target: x86_64-pc-windows-msvc
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+    - uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release --locked --target ${{ matrix.target }}
+    - name: Strip release binary (linux and macos)
+      if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+      run: strip "target/${{ matrix.target }}/release/eva"
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: target/${{ matrix.target }}/release/eva*

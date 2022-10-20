@@ -37,9 +37,9 @@ pub fn handler(e: CalcError) -> String {
         CalcError::Help => {
             // calculate max width but ideally this should be calculated once
             let mut max_width = 79; // capped at 79
-            if let Some((w, _)) = term_size::dimensions() {
-                if w < max_width {
-                    max_width = w;
+            if let Some((terminal_size::Width(w), _)) = terminal_size::terminal_size() {
+                if (w as usize) < max_width {
+                    max_width = w as usize;
                 }
             }
             let operators: Vec<_> = lex::OPERATORS.keys().map(|c| c.to_string()).collect();
