@@ -140,7 +140,7 @@ fn main() {
     }
 }
 
-fn cmd() -> Command<'static> {
+fn cmd() -> Command {
     clap::command!()
         .arg(
             Arg::new("input")
