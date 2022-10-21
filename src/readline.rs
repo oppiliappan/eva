@@ -137,7 +137,7 @@ pub fn create_readline() -> Editor<RLHelper> {
         .completion_type(CompletionType::Circular)
         .max_history_size(1000)
         .build();
-    let mut rl = Editor::with_config(config);
+    let mut rl = Editor::with_config(config).unwrap();
     let h = RLHelper {
         completer: FilenameCompleter::new(),
         highlighter: LineHighlighter {},
