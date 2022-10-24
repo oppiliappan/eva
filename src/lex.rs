@@ -20,7 +20,7 @@ impl Operator {
     pub fn operate(self, x: f64, y: f64) -> Result<f64, CalcError> {
         if self.token == '/' && y == 0. {
             return Err(CalcError::Math(Math::DivideByZero));
-        } else if self.token == '!' && (x.fract() != 0.0 || x < 0.0) {
+        } else if self.token == '!' && (x < 0.0 || x.fract() != 0.0) {
             return Err(CalcError::Math(Math::OutOfBounds));
         } else if self.token == '!' && x == 0.0 {
             // Must return 1 manually as 0..=n where n is 0.0 doesn't work AFAIK.
