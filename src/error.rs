@@ -2,53 +2,60 @@
  * Refer to LICENCE for more information.
  * */
 
+use std::fmt;
 use std::iter::ExactSizeIterator;
 
 use crate::lex;
 
-#[derive(Debug, PartialEq)]
-pub enum CalcError {
-    Math(Math),
-    Syntax(String),
-    Parser(String),
-    Help,
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Math {
+/// Math related errors.
+#[derive(Debug, PartialEq, Eq)]
+pub enum MathError {
     DivideByZero,
     OutOfBounds,
     UnknownBase,
     TooLarge,
 }
 
-pub fn handler(e: CalcError) -> String {
-    match e {
-        CalcError::Math(math_err) => match math_err {
-            Math::DivideByZero => "Math Error: Divide by zero error!".to_string(),
-            Math::OutOfBounds => "Domain Error: Out of bounds!".to_string(),
-            Math::UnknownBase => "Base too large! Accepted ranges: 0 - 36".to_string(),
-            Math::TooLarge => {
-                "Error: to large to process! Max value: ".to_string() + &f64::MAX.to_string()
-            }
-        },
-        CalcError::Syntax(details) => format!("Syntax Error: {}", details),
-        CalcError::Parser(details) => format!("Parser Error: {}", details),
-        CalcError::Help => {
-            // calculate max width but ideally this should be calculated once
-            let mut max_width = 79; // capped at 79
-            if let Some((terminal_size::Width(w), _)) = terminal_size::terminal_size() {
-                if (w as usize) < max_width {
-                    max_width = w as usize;
+/// Generic calculation errors.
+#[derive(Debug, PartialEq, Eq)]
+pub enum CalcError {
+    Math(MathError),
+    Syntax(String),
+    Parser(String),
+    Help,
+}
+
+impl fmt::Display for CalcError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            CalcError::Math(math_err) => match math_err {
+                MathError::DivideByZero => write!(f, "Math Error: Divide by zero error!"),
+                MathError::OutOfBounds => write!(f, "Domain Error: Out of bounds!"),
+                MathError::UnknownBase => write!(f, "Base too large! Accepted ranges: 0 - 36"),
+                MathError::TooLarge => {
+                    write!(f, "Error: to large to process! Max value: {}", f64::MAX)
                 }
+            },
+            CalcError::Syntax(details) => write!(f, "Syntax Error: {}", details),
+            CalcError::Parser(details) => write!(f, "Parser Error: {}", details),
+            CalcError::Help => {
+                // calculate max width but ideally this should be calculated once
+                // TODO remove terminal_size from lib dependency
+                let mut max_width = 79; // capped at 79
+                if let Some((terminal_size::Width(w), _)) = terminal_size::terminal_size() {
+                    if (w as usize) < max_width {
+                        max_width = w as usize;
+                    }
+                }
+                let operators: Vec<_> = lex::OPERATORS.keys().map(|c| c.to_string()).collect();
+                write!(
+                    f,
+                    "Constants\n{}\nFunctions\n{}\nOperators\n{}\n",
+                    blocks(max_width, lex::CONSTANTS.keys().cloned()),
+                    blocks(max_width, lex::FUNCTIONS.keys().cloned()),
+                    operators.join(" ")
+                )
             }
-            let operators: Vec<_> = lex::OPERATORS.keys().map(|c| c.to_string()).collect();
-            format!(
-                "Constants\n{}\nFunctions\n{}\nOperators\n{}\n",
-                blocks(max_width, lex::CONSTANTS.keys().cloned()),
-                blocks(max_width, lex::FUNCTIONS.keys().cloned()),
-                operators.join(" ")
-            )
         }
     }
 }
