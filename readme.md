@@ -28,7 +28,7 @@ $ cargo run
 ### usage
 
 ```shell
-eva 0.3.0
+eva 0.3.1
 NerdyPepper <akshayoppiliappan@gmail.com>
 Calculator REPL similar to bc(1)
 
