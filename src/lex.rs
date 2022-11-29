@@ -255,7 +255,7 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
 
                         if num_vec.len() > 0 {
                             if let Some(exp) = num_vec.parse::<usize>().ok() {
-                                result.push(Token::Num(x * pow(10 as i64, exp) as f64));
+                                result.push(Token::Num(x * pow(10 as f64, exp) as f64));
                                 num_vec.clear();
                                 continue;
                             }
