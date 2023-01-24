@@ -21,7 +21,8 @@ $ cargo install eva
 
 - manual
 ```shell
-$ git clone https://github.com/nerdypepper/eva.git
+$ git clone https://github.com/nerdypepper/eva
+$ cd eva
 $ cargo run
 ```
 
