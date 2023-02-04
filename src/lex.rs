@@ -2,6 +2,7 @@
  * Refer to LICENCE for more information.
  * */
 
+use num::pow;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
@@ -237,10 +238,32 @@ pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError
             }
             'a'..='z' | 'A'..='Z' => {
                 let parse_num = num_vec.parse::<f64>().ok();
+
                 if let Some(x) = parse_num {
+                    num_vec.clear();
+
+                    // Check for exponential notation
+                    if letter == 'e' {
+                        while let Some(next) = chars.peek() {
+                            if !matches!(*next, '0'..='9') {
+                                break;
+                            }
+
+                            num_vec.push(*next);
+                            chars.next();
+                        }
+
+                        if num_vec.len() > 0 {
+                            if let Some(exp) = num_vec.parse::<usize>().ok() {
+                                result.push(Token::Num(x * pow(10 as f64, exp) as f64));
+                                num_vec.clear();
+                                continue;
+                            }
+                        }
+                    }
+
                     result.push(Token::Num(x));
                     result.push(OPERATORS.get(&'*').unwrap().clone());
-                    num_vec.clear();
                 }
                 char_vec.push(letter);
                 last_char_is_op = false;
