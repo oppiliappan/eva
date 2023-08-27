@@ -142,6 +142,7 @@ pub static FUNCTIONS: Lazy<HashMap<&str, Token>> = Lazy::new(|| {
     add_fn(&mut m, "cosh", N1(|_ctx, x| x.cosh()));
     add_fn(&mut m, "tanh", N1(|_ctx, x| x.tanh()));
     add_fn(&mut m, "ln", N1(|_ctx, x| x.ln()));
+    add_fn(&mut m, "log2", N1(|_ctx, x| x.log2()));
     add_fn(&mut m, "log10", N1(|_ctx, x| x.log10()));
     add_fn(&mut m, "sqrt", N1(|_ctx, x| x.sqrt()));
     add_fn(&mut m, "ceil", N1(|_ctx, x| x.ceil()));

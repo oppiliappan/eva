@@ -215,6 +215,11 @@ mod tests {
         );
     }
     #[test]
+    fn eval_log2() {
+        let evaled = eval("log2(1024)", None);
+        assert_eq!(evaled, Ok(10.));
+    }
+    #[test]
     fn eval_log10() {
         let evaled = eval("log10(1000)", None);
         assert_eq!(evaled, Ok(3.));
