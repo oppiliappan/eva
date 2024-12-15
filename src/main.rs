@@ -284,8 +284,8 @@ mod tests {
     }
     #[test]
     fn eval_exponential_notation() {
-        let evaled = eval("1e5", None);
-        assert_eq!(evaled, Ok(100000.0));
+        let evaled = eval("1e11", None);
+        assert_eq!(evaled, Ok(100000000000.0));
     }
     #[test]
     fn eval_exponential_notation_decimal() {
