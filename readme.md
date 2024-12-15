@@ -21,7 +21,8 @@ $ cargo install eva
 
 - manual
 ```shell
-$ git clone https://github.com/nerdypepper/eva.git
+$ git clone https://github.com/nerdypepper/eva
+$ cd eva
 $ cargo run
 ```
 
@@ -95,8 +96,8 @@ all trigonometric functions expect input in degrees.
 ```
 1 argument:
 sin    cos     tan    csc    sec    cot    sinh   cosh   tanh
-asin   acos    atan   acsc   asec   acot   ln     log10  sqrt
-ceil   floor   abs
+asin   acos    atan   acsc   asec   acot   ln     log2   log10
+sqrt   ceil    floor  abs
 
 2 arguments:
 log    nroot

@@ -4,11 +4,11 @@
 
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
+use std::fmt;
 
-use crate::error::{CalcError, Math};
-use crate::CONFIGURATION;
+use crate::error::{CalcError, MathError};
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Operator {
     token: char,
     pub operation: fn(f64, f64) -> f64,
@@ -19,44 +19,69 @@ pub struct Operator {
 impl Operator {
     pub fn operate(self, x: f64, y: f64) -> Result<f64, CalcError> {
         if self.token == '/' && y == 0. {
-            return Err(CalcError::Math(Math::DivideByZero));
+            return Err(CalcError::Math(MathError::DivideByZero));
         } else if self.token == '!' && (x < 0.0 || x.fract() != 0.0) {
-            return Err(CalcError::Math(Math::OutOfBounds));
+            return Err(CalcError::Math(MathError::OutOfBounds));
         } else if self.token == '!' && x == 0.0 {
             // Must return 1 manually as 0..=n where n is 0.0 doesn't work AFAIK.
             return Ok(1.0);
         }
         let result = (self.operation)(x, y);
         if !result.is_finite() {
-            Err(CalcError::Math(Math::TooLarge))
+            Err(CalcError::Math(MathError::TooLarge))
         } else {
             Ok(result)
         }
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone)]
 pub enum Relation {
-    N1(fn(f64) -> f64),
-    N2(fn(f64, f64) -> f64),
+    N1(fn(&FunctionContext, f64) -> f64),
+    N2(fn(&FunctionContext, f64, f64) -> f64),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone)]
 pub struct Function {
     token: &'static str,
     relation: Relation,
 }
 
+impl fmt::Debug for Function {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("fn").field("token", &self.token).finish()
+    }
+}
+
+impl PartialEq for Function {
+    fn eq(&self, other: &Self) -> bool {
+        self.token == other.token
+    }
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct FunctionContext {
+    pub angle_unit: AngleUnit,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum AngleUnit {
+    #[default]
+    Degree,
+    Radian,
+    Gradian,
+}
+
 impl Function {
-    pub fn apply(self, args: &[f64]) -> Result<f64, CalcError> {
+    pub fn apply(self, ctx: &FunctionContext, args: &[f64]) -> Result<f64, CalcError> {
         let result = match self.relation {
-            Relation::N1(func) => (func)(args[0]),
-            Relation::N2(func) => (func)(args[0], args[1]),
+            Relation::N1(func) => (func)(ctx, args[0]),
+            Relation::N2(func) => (func)(ctx, args[0], args[1]),
         };
         if result.is_finite() {
             Ok(result)
         } else {
-            Err(CalcError::Math(Math::OutOfBounds))
+            Err(CalcError::Math(MathError::OutOfBounds))
         }
     }
     pub fn arity(&self) -> usize {
@@ -107,34 +132,35 @@ pub static FUNCTIONS: Lazy<HashMap<&str, Token>> = Lazy::new(|| {
         map.insert(token, func);
     }
     let mut m = HashMap::new();
-    add_fn(&mut m, "sin", N1(|x| rad(x).sin()));
-    add_fn(&mut m, "cos", N1(|x| rad(x).cos()));
-    add_fn(&mut m, "tan", N1(|x| rad(x).tan()));
-    add_fn(&mut m, "csc", N1(|x| rad(x).sin().recip()));
-    add_fn(&mut m, "sec", N1(|x| rad(x).cos().recip()));
-    add_fn(&mut m, "cot", N1(|x| rad(x).tan().recip()));
-    add_fn(&mut m, "sinh", N1(|x| x.sinh()));
-    add_fn(&mut m, "cosh", N1(|x| x.cosh()));
-    add_fn(&mut m, "tanh", N1(|x| x.tanh()));
-    add_fn(&mut m, "ln", N1(|x| x.ln()));
-    add_fn(&mut m, "log10", N1(|x| x.log10()));
-    add_fn(&mut m, "sqrt", N1(|x| x.sqrt()));
-    add_fn(&mut m, "ceil", N1(|x| x.ceil()));
-    add_fn(&mut m, "floor", N1(|x| x.floor()));
-    add_fn(&mut m, "rad", N1(|x| x.to_radians()));
-    add_fn(&mut m, "deg", N1(|x| x.to_degrees()));
-    add_fn(&mut m, "abs", N1(|x| x.abs()));
-    add_fn(&mut m, "asin", N1(|x| x.asin()));
-    add_fn(&mut m, "acos", N1(|x| x.acos()));
-    add_fn(&mut m, "atan", N1(|x| x.atan()));
-    add_fn(&mut m, "acsc", N1(|x| (1. / x).asin()));
-    add_fn(&mut m, "asec", N1(|x| (1. / x).acos()));
-    add_fn(&mut m, "acot", N1(|x| (1. / x).atan()));
-    add_fn(&mut m, "exp", N1(|x| x.exp()));
-    add_fn(&mut m, "exp2", N1(|x| x.exp2()));
-    add_fn(&mut m, "round", N1(|x| x.round()));
-    add_fn(&mut m, "log", N2(|x, y| x.log(y)));
-    add_fn(&mut m, "nroot", N2(|x, y| x.powf(1. / y)));
+    add_fn(&mut m, "sin", N1(|ctx, x| rad(ctx, x).sin()));
+    add_fn(&mut m, "cos", N1(|ctx, x| rad(ctx, x).cos()));
+    add_fn(&mut m, "tan", N1(|ctx, x| rad(ctx, x).tan()));
+    add_fn(&mut m, "csc", N1(|ctx, x| rad(ctx, x).sin().recip()));
+    add_fn(&mut m, "sec", N1(|ctx, x| rad(ctx, x).cos().recip()));
+    add_fn(&mut m, "cot", N1(|ctx, x| rad(ctx, x).tan().recip()));
+    add_fn(&mut m, "sinh", N1(|_ctx, x| x.sinh()));
+    add_fn(&mut m, "cosh", N1(|_ctx, x| x.cosh()));
+    add_fn(&mut m, "tanh", N1(|_ctx, x| x.tanh()));
+    add_fn(&mut m, "ln", N1(|_ctx, x| x.ln()));
+    add_fn(&mut m, "log2", N1(|_ctx, x| x.log2()));
+    add_fn(&mut m, "log10", N1(|_ctx, x| x.log10()));
+    add_fn(&mut m, "sqrt", N1(|_ctx, x| x.sqrt()));
+    add_fn(&mut m, "ceil", N1(|_ctx, x| x.ceil()));
+    add_fn(&mut m, "floor", N1(|_ctx, x| x.floor()));
+    add_fn(&mut m, "rad", N1(|_ctx, x| x.to_radians()));
+    add_fn(&mut m, "deg", N1(|_ctx, x| x.to_degrees()));
+    add_fn(&mut m, "abs", N1(|_ctx, x| x.abs()));
+    add_fn(&mut m, "asin", N1(|_ctx, x| x.asin()));
+    add_fn(&mut m, "acos", N1(|_ctx, x| x.acos()));
+    add_fn(&mut m, "atan", N1(|_ctx, x| x.atan()));
+    add_fn(&mut m, "acsc", N1(|_ctx, x| (1. / x).asin()));
+    add_fn(&mut m, "asec", N1(|_ctx, x| (1. / x).acos()));
+    add_fn(&mut m, "acot", N1(|_ctx, x| (1. / x).atan()));
+    add_fn(&mut m, "exp", N1(|_ctx, x| x.exp()));
+    add_fn(&mut m, "exp2", N1(|_ctx, x| x.exp2()));
+    add_fn(&mut m, "round", N1(|_ctx, x| x.round()));
+    add_fn(&mut m, "log", N2(|_ctx, x, y| x.log(y)));
+    add_fn(&mut m, "nroot", N2(|_ctx, x, y| x.powf(1. / y)));
     m
 });
 
@@ -168,7 +194,7 @@ fn factorial(n: f64) -> f64 {
     answer
 }
 
-pub fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError> {
+pub(crate) fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, CalcError> {
     let mut num_vec: String = String::new();
     let mut char_vec: String = String::new();
     let mut result: Vec<Token> = vec![];
@@ -356,8 +382,9 @@ fn drain_stack(num_vec: &mut String, char_vec: &mut String, result: &mut Vec<Tok
 }
 
 /// Convert to radian if radian_mode is enabled.
-fn rad(x: f64) -> f64 {
-    if CONFIGURATION.radian_mode {
+fn rad(ctx: &FunctionContext, x: f64) -> f64 {
+    // TODO gradian
+    if ctx.angle_unit == AngleUnit::Radian {
         x
     } else {
         x.to_radians()

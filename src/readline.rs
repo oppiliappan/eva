@@ -13,9 +13,9 @@ use directories::ProjectDirs;
 
 use regex::Regex;
 
-use crate::error::CalcError;
-use crate::eval_math_expression;
-use crate::lex::{CONSTANTS, FUNCTIONS};
+use eva::error::CalcError;
+use eva::eval_expr;
+use eva::lex::{FunctionContext, CONSTANTS, FUNCTIONS};
 
 pub struct RLHelper {
     completer: FilenameCompleter,
@@ -23,7 +23,10 @@ pub struct RLHelper {
     hinter: HistoryHinter,
 }
 
-struct LineHighlighter {}
+struct LineHighlighter {
+    ctx: FunctionContext,
+    fix: usize,
+}
 impl Highlighter for LineHighlighter {
     fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
         Owned(format!("\x1b[90m{}\x1b[0m", hint))
@@ -50,7 +53,7 @@ impl Highlighter for LineHighlighter {
             Some(val) => val.parse::<f64>().ok(),
             None => None,
         };
-        let op = eval_math_expression(line, prev_ans);
+        let op = eval_expr(&self.ctx, self.fix, line, prev_ans);
         match op {
             Ok(_) => {
                 let constants = CONSTANTS.keys();
@@ -128,7 +131,7 @@ impl Validator for RLHelper {}
 
 impl Helper for RLHelper {}
 
-pub fn create_readline() -> Editor<RLHelper> {
+pub fn create_readline(ctx: FunctionContext, fix: usize) -> Editor<RLHelper> {
     let config_builder = Builder::new();
     let config = config_builder
         .color_mode(ColorMode::Enabled)
@@ -140,7 +143,7 @@ pub fn create_readline() -> Editor<RLHelper> {
     let mut rl = Editor::with_config(config).unwrap();
     let h = RLHelper {
         completer: FilenameCompleter::new(),
-        highlighter: LineHighlighter {},
+        highlighter: LineHighlighter { ctx, fix },
         hinter: HistoryHinter {},
     };
     rl.set_helper(Some(h));

@@ -1,31 +1,4 @@
 use num::{BigInt, FromPrimitive, ToPrimitive};
-use std::cmp::Ordering;
-
-use crate::error::CalcError;
-use crate::CONFIGURATION;
-
-pub fn autobalance_parens(input: &str) -> Result<String, CalcError> {
-    let mut balanced = String::from(input);
-    let mut left_parens = 0;
-    let mut right_parens = 0;
-    for letter in input.chars() {
-        if letter == '(' {
-            left_parens += 1;
-        } else if letter == ')' {
-            right_parens += 1;
-        }
-    }
-
-    match left_parens.cmp(&right_parens) {
-        Ordering::Greater => {
-            let extras = ")".repeat(left_parens - right_parens);
-            balanced.push_str(&extras[..]);
-            Ok(balanced)
-        }
-        Ordering::Equal => Ok(balanced),
-        Ordering::Less => Err(CalcError::Syntax("Mismatched parentheses!".into())),
-    }
-}
 
 fn thousand_sep(mut s: String) -> String {
     let inc = 3;
@@ -38,23 +11,23 @@ fn thousand_sep(mut s: String) -> String {
     s
 }
 
-pub fn pprint(mut ans: f64) {
+pub fn pprint(base: u8, fix: usize, mut ans: f64) {
     if ans.is_infinite() {
         println!("{}inf", if ans.is_sign_positive() { "" } else { "-" });
     } else if ans.is_nan() {
         println!("nan");
-    } else if CONFIGURATION.base == 10 {
+    } else if base == 10 {
         // use standard library formatter since it handle printing pretty well
-        let ans = format!("{:.*}", CONFIGURATION.fix, ans);
+        let ans = format!("{:.*}", fix, ans);
         println!("{}", thousand_sep(ans));
     } else {
-        ans = format!("{:.*}", CONFIGURATION.fix, ans).parse().unwrap();
+        ans = format!("{:.*}", fix, ans).parse().unwrap();
         let table: &[u8] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".as_bytes();
 
         // format integral part of float
         let mut integral = BigInt::from_f64(ans.abs().trunc()).unwrap();
         let mut obase_int = String::new();
-        let obaseb = BigInt::from_usize(CONFIGURATION.base as usize).unwrap();
+        let obaseb = BigInt::from_usize(base as usize).unwrap();
 
         while integral >= obaseb {
             obase_int.push(table[(&integral % &obaseb).to_usize().unwrap()] as char);
@@ -72,10 +45,10 @@ pub fn pprint(mut ans: f64) {
         let mut obase_fract = String::new();
         let mut i = 0;
         loop {
-            fract *= CONFIGURATION.base as f64;
+            fract *= base as f64;
             obase_fract.push(table[fract.trunc() as usize] as char);
             i += 1;
-            if fract.fract() == 0. || i >= CONFIGURATION.fix {
+            if fract.fract() == 0. || i >= fix {
                 break;
             }
             fract = fract.fract();

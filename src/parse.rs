@@ -3,7 +3,7 @@
  * */
 
 use crate::error::CalcError;
-use crate::lex::Token;
+use crate::lex::{FunctionContext, Token};
 
 pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
     let mut postfixed: Vec<Token> = vec![];
@@ -76,7 +76,7 @@ pub fn to_postfix(tokens: Vec<Token>) -> Result<Vec<Token>, CalcError> {
     Ok(postfixed)
 }
 
-pub fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, CalcError> {
+pub fn eval_postfix(ctx: &FunctionContext, postfixed: Vec<Token>) -> Result<f64, CalcError> {
     let mut num_stack: Vec<f64> = vec![];
     let mut args = vec![];
     for token in postfixed {
@@ -110,7 +110,7 @@ pub fn eval_postfix(postfixed: Vec<Token>) -> Result<f64, CalcError> {
                         )));
                     }
                 }
-                num_stack.push(func.apply(&args)?);
+                num_stack.push(func.apply(ctx, &args)?);
                 args.clear();
             }
             _ => unreachable!("wut"),
