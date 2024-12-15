@@ -146,6 +146,17 @@ mod tests {
         assert_eq!(evaled, Ok(20.0855369232));
     }
     #[test]
+    fn eval_exponential_notation() {
+        let evaled = eval("1e11", None);
+        assert_eq!(evaled, Ok(100000000000.0));
+    }
+    #[test]
+    fn eval_exponential_notation_decimal() {
+        let evaled = eval("2.5e5", None);
+        assert_eq!(evaled, Ok(250000.0));
+    }
+
+    #[test]
     fn eval_e_times_n() {
         let evaled = eval("e0", None);
         assert_eq!(evaled, Ok(0.));

@@ -263,10 +263,27 @@ pub(crate) fn lexer(input: &str, prev_ans: Option<f64>) -> Result<Vec<Token>, Ca
             }
             'a'..='z' | 'A'..='Z' => {
                 let parse_num = num_vec.parse::<f64>().ok();
+
                 if let Some(x) = parse_num {
+                    num_vec.clear();
+
+                    // Check for exponential notation
+                    if letter == 'e' {
+                        while let Some(next) = chars.next_if(|&x| matches!(x, '0'..='9')) {
+                            num_vec.push(next);
+                        }
+
+                        if !num_vec.is_empty() {
+                            if let Some(exp) = num_vec.parse::<usize>().ok() {
+                                result.push(Token::Num(x * num::pow(10 as f64, exp) as f64));
+                                num_vec.clear();
+                                continue;
+                            }
+                        }
+                    }
+
                     result.push(Token::Num(x));
                     result.push(OPERATORS.get(&'*').unwrap().clone());
-                    num_vec.clear();
                 }
                 char_vec.push(letter);
                 last_char_is_op = false;
