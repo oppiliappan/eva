@@ -4,8 +4,9 @@ use std::path::PathBuf;
 use rustyline::completion::{Completer, FilenameCompleter, Pair};
 use rustyline::config::{Builder, ColorMode, CompletionType, EditMode};
 use rustyline::error::ReadlineError;
-use rustyline::highlight::Highlighter;
+use rustyline::highlight::{CmdKind, Highlighter};
 use rustyline::hint::{Hinter, HistoryHinter};
+use rustyline::history::FileHistory;
 use rustyline::validate::Validator;
 use rustyline::{Context, Editor, Helper};
 
@@ -97,7 +98,7 @@ impl Highlighter for LineHighlighter {
 }
 
 impl Highlighter for RLHelper {
-    fn highlight_char(&self, _: &str, _: usize) -> bool {
+    fn highlight_char(&self, _: &str, _: usize, _: CmdKind) -> bool {
         true
     }
     fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
@@ -131,14 +132,14 @@ impl Validator for RLHelper {}
 
 impl Helper for RLHelper {}
 
-pub fn create_readline(ctx: FunctionContext, fix: usize) -> Editor<RLHelper> {
+pub fn create_readline(ctx: FunctionContext, fix: usize) -> Editor<RLHelper, FileHistory> {
     let config_builder = Builder::new();
     let config = config_builder
         .color_mode(ColorMode::Enabled)
         .edit_mode(EditMode::Emacs)
         .history_ignore_space(true)
         .completion_type(CompletionType::Circular)
-        .max_history_size(1000)
+        .max_history_size(1000).expect("REASON")
         .build();
     let mut rl = Editor::with_config(config).unwrap();
     let h = RLHelper {

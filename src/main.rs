@@ -99,7 +99,7 @@ fn main() {
             let readline = rl.readline("> ");
             match readline {
                 Ok(line) => {
-                    rl.add_history_entry(line.as_str());
+                    let _ = rl.add_history_entry(line.as_str());
                     let evaled = eval_expr(&ctx, CONFIGURATION.fix, &line[..], prev_ans);
                     match evaled {
                         Ok(ans) => {
